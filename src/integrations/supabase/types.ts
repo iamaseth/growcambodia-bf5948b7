@@ -14,7 +14,203 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      farms: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          lat: number
+          lng: number
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          lat: number
+          lng: number
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          lat?: number
+          lng?: number
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      plant_logs: {
+        Row: {
+          created_at: string
+          crop_type: string
+          farm_id: string
+          id: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          crop_type: string
+          farm_id: string
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          crop_type?: string
+          farm_id?: string
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plant_logs_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      timeline_updates: {
+        Row: {
+          created_at: string
+          growth_stage: string
+          id: string
+          image_urls: string[]
+          likes: number
+          log_id: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          growth_stage: string
+          id?: string
+          image_urls?: string[]
+          likes?: number
+          log_id: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          growth_stage?: string
+          id?: string
+          image_urls?: string[]
+          likes?: number
+          log_id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timeline_updates_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
+            referencedRelation: "plant_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      update_comments: {
+        Row: {
+          author_name: string
+          body: string
+          created_at: string
+          id: string
+          update_id: string
+          user_id: string
+        }
+        Insert: {
+          author_name: string
+          body: string
+          created_at?: string
+          id?: string
+          update_id: string
+          user_id: string
+        }
+        Update: {
+          author_name?: string
+          body?: string
+          created_at?: string
+          id?: string
+          update_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "update_comments_update_id_fkey"
+            columns: ["update_id"]
+            isOneToOne: false
+            referencedRelation: "timeline_updates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      update_likes: {
+        Row: {
+          created_at: string
+          update_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          update_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          update_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "update_likes_update_id_fkey"
+            columns: ["update_id"]
+            isOneToOne: false
+            referencedRelation: "timeline_updates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      crop_knowledge: {
+        Row: {
+          created_at: string
+          crop_name: string
+          diseases: Json
+          growing_conditions: string
+          id: string
+          lifecycle: Json
+          region: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          crop_name: string
+          diseases?: Json
+          growing_conditions: string
+          id?: string
+          lifecycle?: Json
+          region?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          crop_name?: string
+          diseases?: Json
+          growing_conditions?: string
+          id?: string
+          lifecycle?: Json
+          region?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       farms: {
         Row: {
           address: string | null
@@ -49,30 +82,42 @@ export type Database = {
       }
       plant_logs: {
         Row: {
+          area_unit: string | null
+          area_value: number | null
           created_at: string
           crop_type: string
+          estimated_age_years: number | null
           farm_id: string
           id: string
+          quantity: number | null
           status: string
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          area_unit?: string | null
+          area_value?: number | null
           created_at?: string
           crop_type: string
+          estimated_age_years?: number | null
           farm_id: string
           id?: string
+          quantity?: number | null
           status?: string
           title: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          area_unit?: string | null
+          area_value?: number | null
           created_at?: string
           crop_type?: string
+          estimated_age_years?: number | null
           farm_id?: string
           id?: string
+          quantity?: number | null
           status?: string
           title?: string
           updated_at?: string
@@ -146,6 +191,13 @@ export type Database = {
             columns: ["log_id"]
             isOneToOne: false
             referencedRelation: "plant_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timeline_updates_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

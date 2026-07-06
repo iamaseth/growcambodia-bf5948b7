@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { UpdateCard } from "@/components/update-card";
 import { UpdateComposer } from "@/components/update-composer";
+import { CropGuide } from "@/components/crop-guide";
 import { fetchLog, fetchLogTimeline } from "@/lib/db";
 
 export const Route = createFileRoute("/log/$logId")({
@@ -67,10 +68,29 @@ function LogView() {
                     <MapPin className="h-3 w-3" /> {log.farms.name}
                   </p>
                 )}
+                <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                  {log.estimated_age_years != null && (
+                    <span className="rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5">
+                      Age: {log.estimated_age_years} yr
+                    </span>
+                  )}
+                  {log.quantity != null && (
+                    <span className="rounded-full bg-secondary text-secondary-foreground px-2 py-0.5">
+                      {log.quantity} plants/trees
+                    </span>
+                  )}
+                  {log.area_value != null && (
+                    <span className="rounded-full bg-secondary text-secondary-foreground px-2 py-0.5">
+                      {log.area_value} {log.area_unit === "hectares" ? "ha" : "m²"}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </Card>
         )}
+
+        {log && <CropGuide cropName={log.crop_type} />}
 
         <div>
           <h2 className="text-sm font-semibold text-muted-foreground mb-2">Full history</h2>

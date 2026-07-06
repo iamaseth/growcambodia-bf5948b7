@@ -1,19 +1,45 @@
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, ImagePlus, Loader2, X } from "lucide-react";
+import { Plus, ImagePlus, Loader2, X, LocateFixed } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { compressAndUploadPhotos } from "@/lib/photo";
 import { createUpdate, fetchMyFarms, fetchLogsForFarm, createFarm, createLog } from "@/lib/db";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 
-const STAGES = ["Seeding", "Germination", "Vegetative", "Flowering", "Fruiting", "Harvest"];
+export const STAGES = [
+  "Soil Preparation",
+  "Seed/Planting",
+  "Germination",
+  "Transplant",
+  "Vegetative",
+  "Flowering",
+  "Fruiting",
+  "Harvest",
+];
+
+const TREE_CROPS = ["durian", "mango", "coconut", "jackfruit", "papaya", "avocado", "lychee", "longan", "rambutan", "cacao", "citrus", "orange", "lemon", "lime"];
+const isTreeCrop = (crop: string) => {
+  const c = crop.toLowerCase().trim();
+  return TREE_CROPS.some((t) => c.includes(t));
+};
+
+function useGeolocation() {
+  return (): Promise<GeolocationCoordinates> =>
+    new Promise((resolve, reject) => {
+      if (!navigator.geolocation) return reject(new Error("Geolocation not supported on this device"));
+      navigator.geolocation.getCurrentPosition((p) => resolve(p.coords), (err) => {
+        if (err.code === err.PERMISSION_DENIED) reject(new Error("Location permission denied"));
+        else reject(new Error("Couldn't get your location"));
+      }, { timeout: 10000, enableHighAccuracy: true });
+    });
+}
 
 export function UpdateComposer({
   logId,
@@ -27,6 +53,7 @@ export function UpdateComposer({
   const { user } = useAuth();
   const nav = useNavigate();
   const qc = useQueryClient();
+  const getGeo = useGeolocation();
   const [open, setOpen] = useState(false);
   const [stage, setStage] = useState("Vegetative");
   const [notes, setNotes] = useState("");
@@ -38,9 +65,18 @@ export function UpdateComposer({
   const [selectedLog, setSelectedLog] = useState<string>(logId ?? "");
   const [newFarmMode, setNewFarmMode] = useState(false);
   const [farmName, setFarmName] = useState("");
+  const [farmCoords, setFarmCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locBusy, setLocBusy] = useState(false);
+
   const [newLogMode, setNewLogMode] = useState(false);
   const [logTitle, setLogTitle] = useState("");
   const [cropType, setCropType] = useState("");
+  const [ageYears, setAgeYears] = useState<string>("");
+  const [quantity, setQuantity] = useState<string>("");
+  const [areaValue, setAreaValue] = useState<string>("");
+  const [areaUnit, setAreaUnit] = useState<string>("m2");
+
+  const showAgeField = stage === "Transplant" || isTreeCrop(cropType);
 
   const { data: farms } = useQuery({
     queryKey: ["myfarms", user?.id],
@@ -65,6 +101,19 @@ export function UpdateComposer({
     setPreviews((p) => p.filter((_, idx) => idx !== i));
   };
 
+  const useCurrentLocation = async () => {
+    setLocBusy(true);
+    try {
+      const c = await getGeo();
+      setFarmCoords({ lat: c.latitude, lng: c.longitude });
+      toast.success("Location captured");
+    } catch (e: any) {
+      toast.error(e.message ?? "Couldn't get location");
+    } finally {
+      setLocBusy(false);
+    }
+  };
+
   const reset = () => {
     setStage("Vegetative");
     setNotes("");
@@ -73,19 +122,18 @@ export function UpdateComposer({
     setNewFarmMode(false);
     setNewLogMode(false);
     setFarmName("");
+    setFarmCoords(null);
     setLogTitle("");
     setCropType("");
+    setAgeYears("");
+    setQuantity("");
+    setAreaValue("");
+    setAreaUnit("m2");
     if (!logId) {
       setSelectedFarm("");
       setSelectedLog("");
     }
   };
-
-  const useGeolocation = (): Promise<GeolocationCoordinates> =>
-    new Promise((resolve, reject) => {
-      if (!navigator.geolocation) return reject(new Error("Geolocation not supported"));
-      navigator.geolocation.getCurrentPosition((p) => resolve(p.coords), reject, { timeout: 10000 });
-    });
 
   const submit = async () => {
     if (!user) return;
@@ -97,10 +145,10 @@ export function UpdateComposer({
         let farmId = selectedFarm;
         if (newFarmMode) {
           if (!farmName.trim()) throw new Error("Farm name required");
-          const coords = await useGeolocation().catch(() => null);
-          if (!coords) throw new Error("Location permission needed to drop a farm pin");
+          const coords = farmCoords ?? (await getGeo().then((c) => ({ lat: c.latitude, lng: c.longitude })).catch(() => null));
+          if (!coords) throw new Error("Tap 'Use my current location' to drop the pin");
           const farm = await createFarm(
-            { name: farmName.trim(), lat: coords.latitude, lng: coords.longitude },
+            { name: farmName.trim(), lat: coords.lat, lng: coords.lng },
             user.id,
           );
           farmId = farm.id;
@@ -112,7 +160,15 @@ export function UpdateComposer({
         if (newLogMode || !targetLog) {
           if (!logTitle.trim() || !cropType.trim()) throw new Error("Log title and crop type required");
           const log = await createLog(
-            { farm_id: farmId, title: logTitle.trim(), crop_type: cropType.trim() },
+            {
+              farm_id: farmId,
+              title: logTitle.trim(),
+              crop_type: cropType.trim(),
+              estimated_age_years: ageYears ? Number(ageYears) : null,
+              quantity: quantity ? Number(quantity) : null,
+              area_value: areaValue ? Number(areaValue) : null,
+              area_unit: areaValue ? areaUnit : null,
+            },
             user.id,
           );
           targetLog = log.id;
@@ -174,7 +230,20 @@ export function UpdateComposer({
                   </button>
                 </div>
                 {newFarmMode ? (
-                  <Input placeholder="Farm name" value={farmName} onChange={(e) => setFarmName(e.target.value)} />
+                  <div className="space-y-2">
+                    <Input placeholder="Farm name" value={farmName} onChange={(e) => setFarmName(e.target.value)} />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={useCurrentLocation}
+                      disabled={locBusy}
+                      className="w-full"
+                    >
+                      {locBusy ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <LocateFixed className="h-4 w-4 mr-1" />}
+                      {farmCoords ? `Location captured (${farmCoords.lat.toFixed(4)}, ${farmCoords.lng.toFixed(4)})` : "Use my current location"}
+                    </Button>
+                  </div>
                 ) : (
                   <Select value={selectedFarm} onValueChange={(v) => { setSelectedFarm(v); setSelectedLog(""); }}>
                     <SelectTrigger><SelectValue placeholder="Choose a farm" /></SelectTrigger>
@@ -185,13 +254,10 @@ export function UpdateComposer({
                     </SelectContent>
                   </Select>
                 )}
-                {newFarmMode && (
-                  <p className="text-xs text-muted-foreground">We'll use your current GPS location to drop the pin.</p>
-                )}
               </div>
 
               {(selectedFarm || newFarmMode) && (
-                <div className="space-y-1.5">
+                <div className="space-y-2 rounded border p-3">
                   <div className="flex items-center justify-between">
                     <Label>Plant log</Label>
                     <button
@@ -203,9 +269,37 @@ export function UpdateComposer({
                     </button>
                   </div>
                   {newLogMode || newFarmMode ? (
-                    <div className="grid grid-cols-2 gap-2">
-                      <Input placeholder="Title (e.g. North bed)" value={logTitle} onChange={(e) => setLogTitle(e.target.value)} />
-                      <Input placeholder="Crop (e.g. Tomato)" value={cropType} onChange={(e) => setCropType(e.target.value)} />
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input placeholder="Title (e.g. North bed)" value={logTitle} onChange={(e) => setLogTitle(e.target.value)} />
+                        <Input placeholder="Crop (e.g. Durian)" value={cropType} onChange={(e) => setCropType(e.target.value)} />
+                      </div>
+                      {showAgeField && (
+                        <div className="space-y-1">
+                          <Label className="text-xs">Estimated age (years) — optional</Label>
+                          <Input type="number" step="0.5" min="0" placeholder="e.g. 3" value={ageYears} onChange={(e) => setAgeYears(e.target.value)} />
+                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Number of plants/trees</Label>
+                          <Input type="number" min="0" placeholder="e.g. 50" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Planted area</Label>
+                          <div className="flex gap-1">
+                            <Input type="number" min="0" step="0.01" placeholder="e.g. 200" value={areaValue} onChange={(e) => setAreaValue(e.target.value)} />
+                            <Select value={areaUnit} onValueChange={setAreaUnit}>
+                              <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="m2">m²</SelectItem>
+                                <SelectItem value="hectares">ha</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">Fill whichever applies — number of plants OR planted area.</p>
                     </div>
                   ) : (
                     <Select value={selectedLog} onValueChange={setSelectedLog}>

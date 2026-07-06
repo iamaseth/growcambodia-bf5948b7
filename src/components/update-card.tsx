@@ -16,13 +16,17 @@ import {
 import { toast } from "sonner";
 
 const STAGE_COLORS: Record<string, string> = {
+  "soil preparation": "bg-stone-100 text-stone-800",
+  "seed/planting": "bg-amber-100 text-amber-800",
   seeding: "bg-amber-100 text-amber-800",
   germination: "bg-lime-100 text-lime-800",
+  transplant: "bg-emerald-100 text-emerald-800",
   vegetative: "bg-green-100 text-green-800",
   flowering: "bg-pink-100 text-pink-800",
   fruiting: "bg-orange-100 text-orange-800",
   harvest: "bg-yellow-100 text-yellow-800",
 };
+
 
 export function UpdateCard({ item, compact }: { item: FeedItem; compact?: boolean }) {
   const { user } = useAuth();

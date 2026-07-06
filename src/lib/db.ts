@@ -18,7 +18,12 @@ export type PlantLog = {
   crop_type: string;
   status: string;
   created_at: string;
+  estimated_age_years: number | null;
+  quantity: number | null;
+  area_value: number | null;
+  area_unit: string | null;
 };
+
 
 export type TimelineUpdate = {
   id: string;
@@ -65,21 +70,25 @@ export async function fetchMyLogs(userId: string): Promise<(PlantLog & { farms: 
   return data as any;
 }
 
-export async function fetchFeed(): Promise<FeedItem[]> {
-  const { data, error } = await supabase
+export async function fetchFeed(range?: { from?: string; to?: string }): Promise<FeedItem[]> {
+  let q = supabase
     .from("timeline_updates")
     .select("*, plant_logs(*, farms(*)), profiles(display_name, avatar_url)")
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(100);
+  if (range?.from) q = q.gte("created_at", range.from);
+  if (range?.to) q = q.lte("created_at", range.to);
+  const { data, error } = await q;
   if (error) throw error;
   const ids = (data ?? []).map((u: any) => u.id);
-  let counts: Record<string, number> = {};
+  const counts: Record<string, number> = {};
   if (ids.length) {
     const { data: cs } = await supabase.from("update_comments").select("update_id").in("update_id", ids);
     (cs ?? []).forEach((c: any) => (counts[c.update_id] = (counts[c.update_id] ?? 0) + 1));
   }
   return (data ?? []).map((u: any) => ({ ...u, comment_count: counts[u.id] ?? 0 })) as FeedItem[];
 }
+
 
 export async function fetchLogTimeline(logId: string) {
   const { data, error } = await supabase
@@ -117,7 +126,18 @@ export async function createFarm(input: { name: string; lat: number; lng: number
   return data as Farm;
 }
 
-export async function createLog(input: { farm_id: string; title: string; crop_type: string }, userId: string) {
+export async function createLog(
+  input: {
+    farm_id: string;
+    title: string;
+    crop_type: string;
+    estimated_age_years?: number | null;
+    quantity?: number | null;
+    area_value?: number | null;
+    area_unit?: string | null;
+  },
+  userId: string,
+) {
   const { data, error } = await supabase
     .from("plant_logs")
     .insert({ ...input, user_id: userId, status: "active" })
@@ -126,6 +146,7 @@ export async function createLog(input: { farm_id: string; title: string; crop_ty
   if (error) throw error;
   return data as PlantLog;
 }
+
 
 export async function createUpdate(
   input: { log_id: string; growth_stage: string; notes: string; image_urls: string[] },

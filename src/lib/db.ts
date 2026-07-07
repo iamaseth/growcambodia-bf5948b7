@@ -22,6 +22,8 @@ export type PlantLog = {
   quantity: number | null;
   area_value: number | null;
   area_unit: string | null;
+  variety: string | null;
+  planted_at: string | null;
 };
 
 

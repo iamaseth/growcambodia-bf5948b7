@@ -168,6 +168,8 @@ export function UpdateComposer({
               farm_id: farmId,
               title: logTitle.trim(),
               crop_type: cropType.trim(),
+              variety: variety.trim() || null,
+              planted_at: plantedAt || null,
               estimated_age_years: ageYears ? Number(ageYears) : null,
               quantity: quantity ? Number(quantity) : null,
               area_value: areaValue ? Number(areaValue) : null,

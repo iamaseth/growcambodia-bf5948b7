@@ -280,6 +280,10 @@ export function UpdateComposer({
                         <Input placeholder="Title (e.g. North bed)" value={logTitle} onChange={(e) => setLogTitle(e.target.value)} />
                         <Input placeholder="Crop (e.g. Durian)" value={cropType} onChange={(e) => setCropType(e.target.value)} />
                       </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input placeholder="Variety (optional)" value={variety} onChange={(e) => setVariety(e.target.value)} />
+                        <Input type="date" value={plantedAt} onChange={(e) => setPlantedAt(e.target.value)} title="Planted date" />
+                      </div>
                       {showAgeField && (
                         <div className="space-y-1">
                           <Label className="text-xs">Estimated age (years) — optional</Label>

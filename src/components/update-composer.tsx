@@ -71,6 +71,8 @@ export function UpdateComposer({
   const [newLogMode, setNewLogMode] = useState(false);
   const [logTitle, setLogTitle] = useState("");
   const [cropType, setCropType] = useState("");
+  const [variety, setVariety] = useState("");
+  const [plantedAt, setPlantedAt] = useState("");
   const [ageYears, setAgeYears] = useState<string>("");
   const [quantity, setQuantity] = useState<string>("");
   const [areaValue, setAreaValue] = useState<string>("");

@@ -22,6 +22,8 @@ export type PlantLog = {
   quantity: number | null;
   area_value: number | null;
   area_unit: string | null;
+  variety: string | null;
+  planted_at: string | null;
 };
 
 
@@ -131,6 +133,8 @@ export async function createLog(
     farm_id: string;
     title: string;
     crop_type: string;
+    variety?: string | null;
+    planted_at?: string | null;
     estimated_age_years?: number | null;
     quantity?: number | null;
     area_value?: number | null;
@@ -146,6 +150,7 @@ export async function createLog(
   if (error) throw error;
   return data as PlantLog;
 }
+
 
 
 export async function createUpdate(
@@ -186,22 +191,72 @@ export async function fetchMyLikes(userId: string, updateIds: string[]) {
   return new Set((data ?? []).map((r: any) => r.update_id));
 }
 
-export async function fetchComments(updateId: string) {
+export type CommentRow = {
+  id: string;
+  author_name: string;
+  body: string;
+  created_at: string;
+  user_id: string;
+  is_ai: boolean;
+  is_agronomist_reply: boolean;
+  pinned: boolean;
+  category: string | null;
+  confidence: number | null;
+};
+
+export async function fetchComments(updateId: string): Promise<CommentRow[]> {
   const { data, error } = await supabase
     .from("update_comments")
     .select("*")
     .eq("update_id", updateId)
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return data as { id: string; author_name: string; body: string; created_at: string; user_id: string }[];
+  return (data ?? []) as unknown as CommentRow[];
 }
 
-export async function addComment(updateId: string, body: string, userId: string, authorName: string) {
+export async function addComment(updateId: string, body: string, userId: string, authorName: string, opts?: { isAgronomist?: boolean }) {
   const { error } = await supabase.from("update_comments").insert({
     update_id: updateId,
     user_id: userId,
     author_name: authorName,
     body,
+    is_agronomist_reply: !!opts?.isAgronomist,
   });
   if (error) throw error;
 }
+
+export async function togglePinComment(commentId: string, pinned: boolean) {
+  const { error } = await supabase.from("update_comments").update({ pinned }).eq("id", commentId);
+  if (error) throw error;
+}
+
+export type AppRole = "farmer" | "agronomist" | "moderator" | "admin";
+
+export async function fetchMyRoles(userId: string): Promise<AppRole[]> {
+  const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+  if (error) return [];
+  return (data ?? []).map((r: any) => r.role as AppRole);
+}
+
+export async function fetchAdjacentUpdates(logId: string, createdAt: string) {
+  const [prev, next] = await Promise.all([
+    supabase
+      .from("timeline_updates")
+      .select("id, created_at, growth_stage")
+      .eq("log_id", logId)
+      .lt("created_at", createdAt)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("timeline_updates")
+      .select("id, created_at, growth_stage")
+      .eq("log_id", logId)
+      .gt("created_at", createdAt)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  return { prev: prev.data ?? null, next: next.data ?? null };
+}
+

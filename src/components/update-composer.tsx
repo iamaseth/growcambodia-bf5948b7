@@ -71,6 +71,8 @@ export function UpdateComposer({
   const [newLogMode, setNewLogMode] = useState(false);
   const [logTitle, setLogTitle] = useState("");
   const [cropType, setCropType] = useState("");
+  const [variety, setVariety] = useState("");
+  const [plantedAt, setPlantedAt] = useState("");
   const [ageYears, setAgeYears] = useState<string>("");
   const [quantity, setQuantity] = useState<string>("");
   const [areaValue, setAreaValue] = useState<string>("");
@@ -125,6 +127,8 @@ export function UpdateComposer({
     setFarmCoords(null);
     setLogTitle("");
     setCropType("");
+    setVariety("");
+    setPlantedAt("");
     setAgeYears("");
     setQuantity("");
     setAreaValue("");
@@ -164,6 +168,8 @@ export function UpdateComposer({
               farm_id: farmId,
               title: logTitle.trim(),
               crop_type: cropType.trim(),
+              variety: variety.trim() || null,
+              planted_at: plantedAt || null,
               estimated_age_years: ageYears ? Number(ageYears) : null,
               quantity: quantity ? Number(quantity) : null,
               area_value: areaValue ? Number(areaValue) : null,
@@ -273,6 +279,10 @@ export function UpdateComposer({
                       <div className="grid grid-cols-2 gap-2">
                         <Input placeholder="Title (e.g. North bed)" value={logTitle} onChange={(e) => setLogTitle(e.target.value)} />
                         <Input placeholder="Crop (e.g. Durian)" value={cropType} onChange={(e) => setCropType(e.target.value)} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input placeholder="Variety (optional)" value={variety} onChange={(e) => setVariety(e.target.value)} />
+                        <Input type="date" value={plantedAt} onChange={(e) => setPlantedAt(e.target.value)} title="Planted date" />
                       </div>
                       {showAgeField && (
                         <div className="space-y-1">

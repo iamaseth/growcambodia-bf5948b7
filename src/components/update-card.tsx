@@ -1,7 +1,18 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Heart, MessageCircle, MapPin, ImageIcon } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  Heart,
+  MessageCircle,
+  MapPin,
+  ImageIcon,
+  Share2,
+  Sparkles,
+  BadgeCheck,
+  Pin,
+  ChevronRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,9 +22,15 @@ import {
   fetchMyLikes,
   fetchComments,
   addComment,
+  togglePinComment,
+  fetchMyRoles,
   type FeedItem,
+  type CommentRow,
 } from "@/lib/db";
 import { toast } from "sonner";
+import { PhotoLightbox } from "./photo-lightbox";
+import { ShareMenu } from "./share-menu";
+import { analyzeUpdate } from "@/lib/analyze-update.functions";
 
 const STAGE_COLORS: Record<string, string> = {
   "soil preparation": "bg-stone-100 text-stone-800",
@@ -27,11 +44,11 @@ const STAGE_COLORS: Record<string, string> = {
   harvest: "bg-yellow-100 text-yellow-800",
 };
 
-
 export function UpdateCard({ item, compact }: { item: FeedItem; compact?: boolean }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [showComments, setShowComments] = useState(false);
+  const [lightbox, setLightbox] = useState<number | null>(null);
 
   const { data: myLikes } = useQuery({
     queryKey: ["mylikes", user?.id, item.id],
@@ -53,12 +70,28 @@ export function UpdateCard({ item, compact }: { item: FeedItem; compact?: boolea
     onError: (e: any) => toast.error(e.message),
   });
 
+  const analyzeFn = useServerFn(analyzeUpdate);
+  const analyzeMut = useMutation({
+    mutationFn: () => analyzeFn({ data: { updateId: item.id } }),
+    onSuccess: () => {
+      toast.success("AI analysis added");
+      setShowComments(true);
+      qc.invalidateQueries({ queryKey: ["comments", item.id] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Analysis failed"),
+  });
+
   const stageColor = STAGE_COLORS[item.growth_stage.toLowerCase()] ?? "bg-secondary text-secondary-foreground";
   const farm = item.plant_logs?.farms;
   const log = item.plant_logs;
 
+  const shareUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/log/${log?.id ?? ""}#u-${item.id}`
+    : `/log/${log?.id ?? ""}`;
+  const shareText = `${log?.crop_type ?? "Crop"} update — ${item.growth_stage} on CropTrack`;
+
   return (
-    <Card className="overflow-hidden">
+    <Card id={`u-${item.id}`} className="overflow-hidden scroll-mt-20">
       <div className="p-4 pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -87,20 +120,21 @@ export function UpdateCard({ item, compact }: { item: FeedItem; compact?: boolea
       {item.image_urls.length > 0 && (
         <div className={`grid gap-0.5 ${item.image_urls.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
           {item.image_urls.slice(0, 4).map((url, i) => (
-            <img
+            <button
               key={i}
-              src={url}
-              alt=""
-              loading="lazy"
-              className="w-full aspect-square object-cover bg-muted"
-            />
+              type="button"
+              onClick={() => setLightbox(i)}
+              className="block w-full aspect-square bg-muted overflow-hidden"
+            >
+              <img src={url} alt="" loading="lazy" className="w-full h-full object-cover hover:opacity-95 transition" />
+            </button>
           ))}
         </div>
       )}
 
       {item.notes && <p className="px-4 py-3 text-sm whitespace-pre-wrap">{item.notes}</p>}
 
-      <div className="px-2 pb-2 flex items-center gap-1">
+      <div className="px-2 pb-2 flex items-center gap-0.5 flex-wrap">
         <Button
           variant="ghost"
           size="sm"
@@ -114,6 +148,23 @@ export function UpdateCard({ item, compact }: { item: FeedItem; compact?: boolea
           <MessageCircle className="h-4 w-4 mr-1.5" />
           {item.comment_count}
         </Button>
+        <ShareMenu
+          url={shareUrl}
+          text={shareText}
+          trigger={<><Share2 className="h-4 w-4 mr-1.5" />Share</>}
+        />
+        {user && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => analyzeMut.mutate()}
+            disabled={analyzeMut.isPending}
+            title="Ask the AI agronomist"
+          >
+            <Sparkles className="h-4 w-4 mr-1.5 text-primary" />
+            {analyzeMut.isPending ? "Analyzing…" : "Analyze"}
+          </Button>
+        )}
         {item.image_urls.length > 4 && (
           <span className="text-xs text-muted-foreground ml-auto pr-3 flex items-center gap-1">
             <ImageIcon className="h-3 w-3" /> +{item.image_urls.length - 4}
@@ -121,24 +172,47 @@ export function UpdateCard({ item, compact }: { item: FeedItem; compact?: boolea
         )}
       </div>
 
-      {showComments && <CommentsSection updateId={item.id} />}
+      {!compact && log && (
+        <div className="border-t px-4 py-2 flex items-center justify-between text-xs text-muted-foreground">
+          <Link to="/log/$logId" params={{ logId: log.id }} className="hover:text-primary flex items-center gap-1">
+            View full timeline <ChevronRight className="h-3 w-3" />
+          </Link>
+        </div>
+      )}
+
+      {showComments && <CommentsSection updateId={item.id} logOwnerId={log?.user_id} />}
+
+      {lightbox !== null && (
+        <PhotoLightbox images={item.image_urls} startIndex={lightbox} onClose={() => setLightbox(null)} />
+      )}
     </Card>
   );
 }
 
-function CommentsSection({ updateId }: { updateId: string }) {
+function CommentsSection({ updateId, logOwnerId: _logOwnerId }: { updateId: string; logOwnerId?: string }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [body, setBody] = useState("");
+
   const { data: comments } = useQuery({
     queryKey: ["comments", updateId],
     queryFn: () => fetchComments(updateId),
   });
+
+  const { data: roles } = useQuery({
+    queryKey: ["myroles", user?.id],
+    queryFn: () => (user ? fetchMyRoles(user.id) : Promise.resolve([])),
+    enabled: !!user,
+  });
+
+  const isAgronomist = roles?.includes("agronomist") ?? false;
+  const canPin = (roles?.includes("admin") || roles?.includes("moderator")) ?? false;
+
   const mut = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Sign in to comment");
       const name = (user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "Farmer") as string;
-      await addComment(updateId, body.trim(), user.id, name);
+      await addComment(updateId, body.trim(), user.id, name, { isAgronomist });
     },
     onSuccess: () => {
       setBody("");
@@ -149,37 +223,98 @@ function CommentsSection({ updateId }: { updateId: string }) {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const pinMut = useMutation({
+    mutationFn: ({ id, pinned }: { id: string; pinned: boolean }) => togglePinComment(id, pinned),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["comments", updateId] }),
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const sorted = [...(comments ?? [])].sort((a, b) => Number(b.pinned) - Number(a.pinned));
+
   return (
     <div className="border-t bg-muted/30 px-4 py-3 space-y-3">
-      {(comments ?? []).map((c) => (
-        <div key={c.id} className="text-sm">
-          <span className="font-medium">{c.author_name}</span>{" "}
-          <span className="text-muted-foreground text-xs">· {new Date(c.created_at).toLocaleDateString()}</span>
-          <p className="text-sm">{c.body}</p>
-        </div>
+      {sorted.map((c) => (
+        <CommentRowView key={c.id} c={c} canPin={canPin} onPin={(id, p) => pinMut.mutate({ id, pinned: p })} />
       ))}
       {user ? (
-        <div className="flex gap-2">
-          <Textarea
-            rows={1}
-            placeholder="Write a comment…"
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            className="min-h-9 text-sm"
-          />
-          <Button
-            size="sm"
-            disabled={!body.trim() || mut.isPending}
-            onClick={() => mut.mutate()}
-          >
-            Post
-          </Button>
+        <div className="space-y-1.5">
+          <div className="flex gap-2">
+            <Textarea
+              rows={1}
+              placeholder={isAgronomist ? "Reply as verified agronomist…" : "Write a comment…"}
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              className="min-h-9 text-sm"
+            />
+            <Button size="sm" disabled={!body.trim() || mut.isPending} onClick={() => mut.mutate()}>
+              Post
+            </Button>
+          </div>
+          {isAgronomist && (
+            <p className="text-[10px] text-emerald-700 flex items-center gap-1">
+              <BadgeCheck className="h-3 w-3" /> Posting as Verified Agronomist
+            </p>
+          )}
         </div>
       ) : (
         <p className="text-xs text-muted-foreground">
           <Link to="/auth" className="text-primary hover:underline">Sign in</Link> to comment.
         </p>
       )}
+    </div>
+  );
+}
+
+function CommentRowView({
+  c,
+  canPin,
+  onPin,
+}: {
+  c: CommentRow;
+  canPin: boolean;
+  onPin: (id: string, pinned: boolean) => void;
+}) {
+  const container = c.is_ai
+    ? "border-l-4 border-primary bg-primary/5 rounded-r p-2"
+    : c.is_agronomist_reply
+    ? "border-l-4 border-emerald-500 bg-emerald-50 rounded-r p-2"
+    : "";
+  return (
+    <div className={`text-sm ${container}`}>
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {c.is_ai ? (
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
+            <Sparkles className="h-3 w-3" /> AI Agronomist
+          </span>
+        ) : (
+          <span className="font-medium">{c.author_name}</span>
+        )}
+        {c.is_agronomist_reply && !c.is_ai && (
+          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full">
+            <BadgeCheck className="h-3 w-3" /> Verified Agronomist
+          </span>
+        )}
+        {c.pinned && (
+          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">
+            <Pin className="h-3 w-3" /> Pinned
+          </span>
+        )}
+        <span className="text-muted-foreground text-xs">· {new Date(c.created_at).toLocaleDateString()}</span>
+        {canPin && (
+          <button
+            onClick={() => onPin(c.id, !c.pinned)}
+            className="ml-auto text-[10px] text-muted-foreground hover:text-primary"
+          >
+            {c.pinned ? "Unpin" : "Pin"}
+          </button>
+        )}
+        {c.confidence != null && (
+          <span className="text-[10px] text-muted-foreground">
+            · confidence {Math.round(c.confidence * 100)}%
+          </span>
+        )}
+      </div>
+      <p className="text-sm whitespace-pre-wrap mt-0.5">{c.body}</p>
     </div>
   );
 }

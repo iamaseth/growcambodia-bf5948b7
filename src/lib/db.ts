@@ -133,6 +133,8 @@ export async function createLog(
     farm_id: string;
     title: string;
     crop_type: string;
+    variety?: string | null;
+    planted_at?: string | null;
     estimated_age_years?: number | null;
     quantity?: number | null;
     area_value?: number | null;
@@ -148,6 +150,7 @@ export async function createLog(
   if (error) throw error;
   return data as PlantLog;
 }
+
 
 
 export async function createUpdate(

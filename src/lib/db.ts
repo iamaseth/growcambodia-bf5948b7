@@ -186,7 +186,20 @@ export async function fetchMyLikes(userId: string, updateIds: string[]) {
   return new Set((data ?? []).map((r: any) => r.update_id));
 }
 
-export async function fetchComments(updateId: string) {
+export type CommentRow = {
+  id: string;
+  author_name: string;
+  body: string;
+  created_at: string;
+  user_id: string;
+  is_ai: boolean;
+  is_agronomist_reply: boolean;
+  pinned: boolean;
+  category: string | null;
+  confidence: number | null;
+};
+
+export async function fetchComments(updateId: string): Promise<CommentRow[]> {
   const { data, error } = await supabase
     .from("update_comments")
     .select("*")

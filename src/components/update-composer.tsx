@@ -127,6 +127,8 @@ export function UpdateComposer({
     setFarmCoords(null);
     setLogTitle("");
     setCropType("");
+    setVariety("");
+    setPlantedAt("");
     setAgeYears("");
     setQuantity("");
     setAreaValue("");

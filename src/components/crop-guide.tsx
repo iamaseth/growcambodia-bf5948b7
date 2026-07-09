@@ -56,16 +56,8 @@ function GuideBody({ data }: { data: any }) {
   const diseases = (data.diseases as unknown as Disease[]) ?? [];
   return (
     <div className="space-y-4 pt-4">
-
-
-  return (
-    <Card className="p-4 space-y-4">
-      <div className="flex items-center gap-2">
-        <BookOpen className="h-5 w-5 text-primary" />
-        <h2 className="font-semibold">Crop guide: {data.crop_name}</h2>
-      </div>
-
       <section>
+
         <h3 className="text-sm font-semibold flex items-center gap-1 mb-1">
           <Leaf className="h-4 w-4 text-primary" /> Growing conditions
         </h3>

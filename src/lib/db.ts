@@ -99,7 +99,8 @@ export async function fetchFeed(range?: { from?: string; to?: string }): Promise
     const { data: cs } = await supabase.from("update_comments").select("update_id").in("update_id", ids);
     (cs ?? []).forEach((c: any) => (counts[c.update_id] = (counts[c.update_id] ?? 0) + 1));
   }
-  return (data ?? []).map((u: any) => ({ ...u, comment_count: counts[u.id] ?? 0 })) as FeedItem[];
+  const items = (data ?? []).map((u: any) => ({ ...u, comment_count: counts[u.id] ?? 0 })) as FeedItem[];
+  return signFeedImages(items);
 }
 
 
@@ -116,7 +117,8 @@ export async function fetchLogTimeline(logId: string) {
     const { data: cs } = await supabase.from("update_comments").select("update_id").in("update_id", ids);
     (cs ?? []).forEach((c: any) => (counts[c.update_id] = (counts[c.update_id] ?? 0) + 1));
   }
-  return (data ?? []).map((u: any) => ({ ...u, comment_count: counts[u.id] ?? 0 })) as FeedItem[];
+  const items = (data ?? []).map((u: any) => ({ ...u, comment_count: counts[u.id] ?? 0 })) as FeedItem[];
+  return signFeedImages(items);
 }
 
 export async function fetchLog(logId: string) {

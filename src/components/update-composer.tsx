@@ -328,15 +328,30 @@ export function UpdateComposer({
                       <p className="text-[10px] text-muted-foreground">Fill whichever applies — number of plants OR planted area.</p>
                     </div>
                   ) : (
-                    <Select value={selectedLog} onValueChange={setSelectedLog}>
-                      <SelectTrigger><SelectValue placeholder="Choose a log" /></SelectTrigger>
+                    <Select
+                      value={selectedLog}
+                      onValueChange={(v) => {
+                        if (v === "__new__") {
+                          setNewLogMode(true);
+                          setSelectedLog("");
+                        } else {
+                          setSelectedLog(v);
+                        }
+                      }}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Choose which plant" /></SelectTrigger>
                       <SelectContent>
                         {(logs ?? []).map((l) => (
                           <SelectItem key={l.id} value={l.id}>{l.title} · {l.crop_type}</SelectItem>
                         ))}
+                        {(logs ?? []).length === 0 && (
+                          <div className="px-2 py-1.5 text-xs text-muted-foreground">No plants at this farm yet.</div>
+                        )}
+                        <SelectItem value="__new__">+ Add new plant</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
+
                 </div>
               )}
             </>

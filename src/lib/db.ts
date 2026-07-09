@@ -1,4 +1,15 @@
 import { supabase } from "@/integrations/supabase/client";
+import { signImageUrls } from "@/lib/photo";
+
+async function signFeedImages<T extends { image_urls: string[] }>(rows: T[]): Promise<T[]> {
+  await Promise.all(
+    rows.map(async (r) => {
+      if (r.image_urls?.length) r.image_urls = await signImageUrls(r.image_urls);
+    }),
+  );
+  return rows;
+}
+
 
 export type Farm = {
   id: string;

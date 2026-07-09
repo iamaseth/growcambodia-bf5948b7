@@ -174,8 +174,8 @@ export function UpdateComposer({
         }
         if (!farmId) throw new Error("Pick a farm");
 
-        if (newLogMode || !targetLog) {
-          if (!logTitle.trim() || !cropType.trim()) throw new Error("Log title and crop type required");
+        if (newLogMode || newFarmMode) {
+          if (!logTitle.trim() || !cropType.trim()) throw new Error("Plant title and crop type required");
           const log = await createLog(
             {
               farm_id: farmId,
@@ -191,8 +191,11 @@ export function UpdateComposer({
             user.id,
           );
           targetLog = log.id;
+        } else if (!targetLog || targetLog === "__new__") {
+          throw new Error("Pick which plant this update is for");
         }
       }
+
 
       if (!targetLog) throw new Error("No plant log selected");
 

@@ -52,12 +52,13 @@ function bucketKey(date: Date, mode: GroupBy) {
 }
 
 function bucketLabel(key: string, mode: GroupBy) {
-  if (mode === "day") return new Date(key).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+  if (mode === "day") return formatDMY(key);
   if (mode === "month") {
     const [y, m] = key.split("-");
     return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
   }
   return `Week of ${key.replace("-", " ")}`;
+
 }
 
 function LogView() {

@@ -302,7 +302,7 @@ function CommentRowView({
             <Pin className="h-3 w-3" /> Pinned
           </span>
         )}
-        <span className="text-muted-foreground text-xs">· {new Date(c.created_at).toLocaleDateString()}</span>
+        <span className="text-muted-foreground text-xs">· {formatDMY(c.created_at)}</span>
         {canPin && (
           <button
             onClick={() => onPin(c.id, !c.pinned)}

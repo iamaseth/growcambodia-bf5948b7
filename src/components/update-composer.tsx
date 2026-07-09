@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, ImagePlus, Loader2, X, LocateFixed } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { compressAndUploadPhotos } from "@/lib/photo";
-import { createUpdate, fetchMyFarms, fetchLogsForFarm, createFarm, createLog } from "@/lib/db";
+import { createUpdate, fetchMyFarms, fetchLogsForFarm, createFarm, createLog, fetchLatestStage } from "@/lib/db";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
+
 
 export const STAGES = [
   "Soil Preparation",
@@ -91,6 +92,18 @@ export function UpdateComposer({
     enabled: !!selectedFarm && !logId,
   });
 
+  // Default growth stage to the most recent stage posted for the selected listing.
+  const activeLogId = logId ?? (selectedLog && selectedLog !== "__new__" ? selectedLog : "");
+  const latestStageQ = useQuery({
+    queryKey: ["latest-stage", activeLogId],
+    queryFn: () => fetchLatestStage(activeLogId),
+    enabled: !!activeLogId && open,
+  });
+  useEffect(() => {
+    if (latestStageQ.data) setStage(latestStageQ.data);
+  }, [latestStageQ.data]);
+
+
   const handleFiles = (fl: FileList | null) => {
     if (!fl) return;
     const arr = Array.from(fl).slice(0, 6 - files.length);
@@ -161,8 +174,8 @@ export function UpdateComposer({
         }
         if (!farmId) throw new Error("Pick a farm");
 
-        if (newLogMode || !targetLog) {
-          if (!logTitle.trim() || !cropType.trim()) throw new Error("Log title and crop type required");
+        if (newLogMode || newFarmMode) {
+          if (!logTitle.trim() || !cropType.trim()) throw new Error("Plant title and crop type required");
           const log = await createLog(
             {
               farm_id: farmId,
@@ -178,8 +191,11 @@ export function UpdateComposer({
             user.id,
           );
           targetLog = log.id;
+        } else if (!targetLog || targetLog === "__new__") {
+          throw new Error("Pick which plant this update is for");
         }
       }
+
 
       if (!targetLog) throw new Error("No plant log selected");
 
@@ -312,15 +328,30 @@ export function UpdateComposer({
                       <p className="text-[10px] text-muted-foreground">Fill whichever applies — number of plants OR planted area.</p>
                     </div>
                   ) : (
-                    <Select value={selectedLog} onValueChange={setSelectedLog}>
-                      <SelectTrigger><SelectValue placeholder="Choose a log" /></SelectTrigger>
+                    <Select
+                      value={selectedLog}
+                      onValueChange={(v) => {
+                        if (v === "__new__") {
+                          setNewLogMode(true);
+                          setSelectedLog("");
+                        } else {
+                          setSelectedLog(v);
+                        }
+                      }}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Choose which plant" /></SelectTrigger>
                       <SelectContent>
                         {(logs ?? []).map((l) => (
                           <SelectItem key={l.id} value={l.id}>{l.title} · {l.crop_type}</SelectItem>
                         ))}
+                        {(logs ?? []).length === 0 && (
+                          <div className="px-2 py-1.5 text-xs text-muted-foreground">No plants at this farm yet.</div>
+                        )}
+                        <SelectItem value="__new__">+ Add new plant</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
+
                 </div>
               )}
             </>

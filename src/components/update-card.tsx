@@ -31,6 +31,8 @@ import { toast } from "sonner";
 import { PhotoLightbox } from "./photo-lightbox";
 import { ShareMenu } from "./share-menu";
 import { analyzeUpdate } from "@/lib/analyze-update.functions";
+import { formatDMY } from "@/lib/date-format";
+
 
 const STAGE_COLORS: Record<string, string> = {
   "soil preparation": "bg-stone-100 text-stone-800",
@@ -98,7 +100,7 @@ export function UpdateCard({ item, compact }: { item: FeedItem; compact?: boolea
             <div className="flex items-center gap-2 text-sm">
               <span className="font-semibold truncate">{item.profiles?.display_name ?? "Farmer"}</span>
               <span className="text-muted-foreground">·</span>
-              <span className="text-muted-foreground text-xs">{new Date(item.created_at).toLocaleDateString()}</span>
+              <span className="text-muted-foreground text-xs">{formatDMY(item.created_at)}</span>
             </div>
             {!compact && log && (
               <Link to="/log/$logId" params={{ logId: log.id }} className="text-sm text-primary hover:underline block truncate">
@@ -141,13 +143,14 @@ export function UpdateCard({ item, compact }: { item: FeedItem; compact?: boolea
           onClick={() => likeMut.mutate()}
           className={liked ? "text-red-600" : ""}
         >
-          <Heart className={`h-4 w-4 mr-1.5 ${liked ? "fill-current" : ""}`} />
-          {item.likes}
+          <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""} ${item.likes > 0 ? "mr-1.5" : ""}`} />
+          {item.likes > 0 ? item.likes : null}
         </Button>
         <Button variant="ghost" size="sm" onClick={() => setShowComments((v) => !v)}>
-          <MessageCircle className="h-4 w-4 mr-1.5" />
-          {item.comment_count}
+          <MessageCircle className={`h-4 w-4 ${item.comment_count > 0 ? "mr-1.5" : ""}`} />
+          {item.comment_count > 0 ? item.comment_count : null}
         </Button>
+
         <ShareMenu
           url={shareUrl}
           text={shareText}
@@ -299,7 +302,7 @@ function CommentRowView({
             <Pin className="h-3 w-3" /> Pinned
           </span>
         )}
-        <span className="text-muted-foreground text-xs">· {new Date(c.created_at).toLocaleDateString()}</span>
+        <span className="text-muted-foreground text-xs">· {formatDMY(c.created_at)}</span>
         {canPin && (
           <button
             onClick={() => onPin(c.id, !c.pinned)}

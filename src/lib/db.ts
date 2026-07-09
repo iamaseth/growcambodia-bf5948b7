@@ -245,6 +245,18 @@ export async function togglePinComment(commentId: string, pinned: boolean) {
 
 export type AppRole = "farmer" | "agronomist" | "moderator" | "admin";
 
+export async function fetchLatestStage(logId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("timeline_updates")
+    .select("growth_stage")
+    .eq("log_id", logId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) return null;
+  return (data?.growth_stage as string | undefined) ?? null;
+}
+
 export async function fetchMyRoles(userId: string): Promise<AppRole[]> {
   const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", userId);
   if (error) return [];

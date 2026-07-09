@@ -11,6 +11,8 @@ import { UpdateComposer } from "@/components/update-composer";
 import { CropGuide } from "@/components/crop-guide";
 import { fetchLog, fetchLogTimeline, type FeedItem } from "@/lib/db";
 import { STAGES } from "@/components/update-composer";
+import { formatDMY } from "@/lib/date-format";
+
 
 export const Route = createFileRoute("/log/$logId")({
   component: LogView,
@@ -50,12 +52,13 @@ function bucketKey(date: Date, mode: GroupBy) {
 }
 
 function bucketLabel(key: string, mode: GroupBy) {
-  if (mode === "day") return new Date(key).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+  if (mode === "day") return formatDMY(key);
   if (mode === "month") {
     const [y, m] = key.split("-");
     return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
   }
   return `Week of ${key.replace("-", " ")}`;
+
 }
 
 function LogView() {
@@ -135,7 +138,7 @@ function LogView() {
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <StatTile icon={<Calendar className="h-3 w-3" />} label="Planted" value={log.planted_at ? new Date(log.planted_at).toLocaleDateString() : "—"} />
+              <StatTile icon={<Calendar className="h-3 w-3" />} label="Planted" value={log.planted_at ? formatDMY(log.planted_at) : "—"} />
               <StatTile icon={<Activity className="h-3 w-3" />} label="Current stage" value={currentStage} />
               <StatTile icon={<Sprout className="h-3 w-3" />} label="Age" value={log.estimated_age_years != null ? `${log.estimated_age_years} yr` : "—"} />
               <StatTile icon={<Users className="h-3 w-3" />} label="Updates" value={String(updates.length)} />

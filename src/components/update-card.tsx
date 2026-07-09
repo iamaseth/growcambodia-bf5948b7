@@ -143,13 +143,14 @@ export function UpdateCard({ item, compact }: { item: FeedItem; compact?: boolea
           onClick={() => likeMut.mutate()}
           className={liked ? "text-red-600" : ""}
         >
-          <Heart className={`h-4 w-4 mr-1.5 ${liked ? "fill-current" : ""}`} />
-          {item.likes}
+          <Heart className={`h-4 w-4 ${liked ? "fill-current" : ""} ${item.likes > 0 ? "mr-1.5" : ""}`} />
+          {item.likes > 0 ? item.likes : null}
         </Button>
         <Button variant="ghost" size="sm" onClick={() => setShowComments((v) => !v)}>
-          <MessageCircle className="h-4 w-4 mr-1.5" />
-          {item.comment_count}
+          <MessageCircle className={`h-4 w-4 ${item.comment_count > 0 ? "mr-1.5" : ""}`} />
+          {item.comment_count > 0 ? item.comment_count : null}
         </Button>
+
         <ShareMenu
           url={shareUrl}
           text={shareText}

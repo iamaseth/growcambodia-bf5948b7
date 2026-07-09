@@ -61,7 +61,10 @@ Reply with JSON only, no prose.`;
       throw new Error("AI returned invalid JSON");
     }
 
-    const { data: inserted, error } = await supabase
+    // Insert with service role: any authenticated user may trigger generation,
+    // but the shared knowledge table itself is admin-write only via RLS.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: inserted, error } = await supabaseAdmin
       .from("crop_knowledge")
       .insert({
         crop_name: data.cropName,
@@ -72,7 +75,6 @@ Reply with JSON only, no prose.`;
       .select()
       .single();
     if (error) {
-      // Race: another request inserted; fetch again
       const { data: again } = await supabase
         .from("crop_knowledge")
         .select("*")

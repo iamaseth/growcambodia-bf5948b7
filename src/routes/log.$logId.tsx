@@ -138,7 +138,7 @@ function LogView() {
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <StatTile icon={<Calendar className="h-3 w-3" />} label="Planted" value={log.planted_at ? new Date(log.planted_at).toLocaleDateString() : "—"} />
+              <StatTile icon={<Calendar className="h-3 w-3" />} label="Planted" value={log.planted_at ? formatDMY(log.planted_at) : "—"} />
               <StatTile icon={<Activity className="h-3 w-3" />} label="Current stage" value={currentStage} />
               <StatTile icon={<Sprout className="h-3 w-3" />} label="Age" value={log.estimated_age_years != null ? `${log.estimated_age_years} yr` : "—"} />
               <StatTile icon={<Users className="h-3 w-3" />} label="Updates" value={String(updates.length)} />

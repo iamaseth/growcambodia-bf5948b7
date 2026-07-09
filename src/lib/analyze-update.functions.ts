@@ -93,7 +93,9 @@ Reply with JSON only.`;
       parsed.next_action && `**Next action:** ${parsed.next_action}`,
     ].filter(Boolean).join("\n\n");
 
-    const { data: inserted, error } = await supabase
+    // Use service role: AI-authored comments are server-generated, RLS blocks is_ai=true from users.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: inserted, error } = await supabaseAdmin
       .from("update_comments")
       .insert({
         update_id: data.updateId,

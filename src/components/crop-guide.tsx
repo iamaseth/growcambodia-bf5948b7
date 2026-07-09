@@ -104,6 +104,6 @@ function GuideBody({ data }: { data: any }) {
       )}
 
       <p className="text-[10px] text-muted-foreground">Guidance tailored for tropical Southeast Asia · region: {data.region}</p>
-    </Card>
+    </div>
   );
 }

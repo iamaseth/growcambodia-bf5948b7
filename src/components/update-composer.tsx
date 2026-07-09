@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, ImagePlus, Loader2, X, LocateFixed } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { compressAndUploadPhotos } from "@/lib/photo";
-import { createUpdate, fetchMyFarms, fetchLogsForFarm, createFarm, createLog } from "@/lib/db";
+import { createUpdate, fetchMyFarms, fetchLogsForFarm, createFarm, createLog, fetchLatestStage } from "@/lib/db";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
+
 
 export const STAGES = [
   "Soil Preparation",

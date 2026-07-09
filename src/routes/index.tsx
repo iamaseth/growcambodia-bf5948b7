@@ -107,8 +107,9 @@ function Home() {
                         >
                           <CalendarIcon className="h-3.5 w-3.5 mr-1" />
                           {preset === "custom" && (customFrom || customTo)
-                            ? `${customFrom ? format(customFrom, "MMM d") : "…"} – ${customTo ? format(customTo, "MMM d") : "…"}`
+                            ? `${customFrom ? formatDM(customFrom) : "…"} – ${customTo ? formatDM(customTo) : "…"}`
                             : "Custom"}
+
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">

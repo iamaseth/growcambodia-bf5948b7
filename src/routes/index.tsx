@@ -60,7 +60,7 @@ function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-32">
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b">
         <div className="max-w-2xl mx-auto flex items-center justify-between px-4 h-14">
           <Link to="/" className="flex items-center gap-2 font-bold text-primary">

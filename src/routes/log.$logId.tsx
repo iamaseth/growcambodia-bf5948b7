@@ -11,6 +11,8 @@ import { UpdateComposer } from "@/components/update-composer";
 import { CropGuide } from "@/components/crop-guide";
 import { fetchLog, fetchLogTimeline, type FeedItem } from "@/lib/db";
 import { STAGES } from "@/components/update-composer";
+import { formatDMY } from "@/lib/date-format";
+
 
 export const Route = createFileRoute("/log/$logId")({
   component: LogView,

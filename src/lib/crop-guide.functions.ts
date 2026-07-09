@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 type LifecycleStage = { stage: string; duration: string };
 type Disease = { name: string; symptoms: string; prevention: string };
@@ -11,16 +10,17 @@ type GuideShape = {
 };
 
 export const getOrGenerateCropGuide = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: { cropName: string }) => {
     if (!input?.cropName || typeof input.cropName !== "string") throw new Error("cropName required");
-    return { cropName: input.cropName.trim() };
+    const trimmed = input.cropName.trim();
+    if (trimmed.length === 0) throw new Error("cropName required");
+    if (trimmed.length > 60) throw new Error("cropName too long");
+    if (!/^[\p{L}0-9 \-']+$/u.test(trimmed)) throw new Error("Invalid crop name");
+    return { cropName: trimmed };
   })
-  .handler(async ({ data }) => {
-    const supabase = createClient<Database>(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PUBLISHABLE_KEY!,
-      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
-    );
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
 
     // Case-insensitive lookup
     const { data: existing } = await supabase
@@ -61,7 +61,10 @@ Reply with JSON only, no prose.`;
       throw new Error("AI returned invalid JSON");
     }
 
-    const { data: inserted, error } = await supabase
+    // Insert with service role: any authenticated user may trigger generation,
+    // but the shared knowledge table itself is admin-write only via RLS.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: inserted, error } = await supabaseAdmin
       .from("crop_knowledge")
       .insert({
         crop_name: data.cropName,
@@ -72,7 +75,6 @@ Reply with JSON only, no prose.`;
       .select()
       .single();
     if (error) {
-      // Race: another request inserted; fetch again
       const { data: again } = await supabase
         .from("crop_knowledge")
         .select("*")

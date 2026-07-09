@@ -1,4 +1,15 @@
 import { supabase } from "@/integrations/supabase/client";
+import { signImageUrls } from "@/lib/photo";
+
+async function signFeedImages<T extends { image_urls: string[] }>(rows: T[]): Promise<T[]> {
+  await Promise.all(
+    rows.map(async (r) => {
+      if (r.image_urls?.length) r.image_urls = await signImageUrls(r.image_urls);
+    }),
+  );
+  return rows;
+}
+
 
 export type Farm = {
   id: string;
@@ -88,7 +99,8 @@ export async function fetchFeed(range?: { from?: string; to?: string }): Promise
     const { data: cs } = await supabase.from("update_comments").select("update_id").in("update_id", ids);
     (cs ?? []).forEach((c: any) => (counts[c.update_id] = (counts[c.update_id] ?? 0) + 1));
   }
-  return (data ?? []).map((u: any) => ({ ...u, comment_count: counts[u.id] ?? 0 })) as FeedItem[];
+  const items = (data ?? []).map((u: any) => ({ ...u, comment_count: counts[u.id] ?? 0 })) as FeedItem[];
+  return signFeedImages(items);
 }
 
 
@@ -105,7 +117,8 @@ export async function fetchLogTimeline(logId: string) {
     const { data: cs } = await supabase.from("update_comments").select("update_id").in("update_id", ids);
     (cs ?? []).forEach((c: any) => (counts[c.update_id] = (counts[c.update_id] ?? 0) + 1));
   }
-  return (data ?? []).map((u: any) => ({ ...u, comment_count: counts[u.id] ?? 0 })) as FeedItem[];
+  const items = (data ?? []).map((u: any) => ({ ...u, comment_count: counts[u.id] ?? 0 })) as FeedItem[];
+  return signFeedImages(items);
 }
 
 export async function fetchLog(logId: string) {

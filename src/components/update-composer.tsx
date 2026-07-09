@@ -92,6 +92,18 @@ export function UpdateComposer({
     enabled: !!selectedFarm && !logId,
   });
 
+  // Default growth stage to the most recent stage posted for the selected listing.
+  const activeLogId = logId ?? (selectedLog && selectedLog !== "__new__" ? selectedLog : "");
+  const latestStageQ = useQuery({
+    queryKey: ["latest-stage", activeLogId],
+    queryFn: () => fetchLatestStage(activeLogId),
+    enabled: !!activeLogId && open,
+  });
+  useEffect(() => {
+    if (latestStageQ.data) setStage(latestStageQ.data);
+  }, [latestStageQ.data]);
+
+
   const handleFiles = (fl: FileList | null) => {
     if (!fl) return;
     const arr = Array.from(fl).slice(0, 6 - files.length);

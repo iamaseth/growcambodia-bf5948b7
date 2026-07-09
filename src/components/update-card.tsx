@@ -100,7 +100,7 @@ export function UpdateCard({ item, compact }: { item: FeedItem; compact?: boolea
             <div className="flex items-center gap-2 text-sm">
               <span className="font-semibold truncate">{item.profiles?.display_name ?? "Farmer"}</span>
               <span className="text-muted-foreground">·</span>
-              <span className="text-muted-foreground text-xs">{new Date(item.created_at).toLocaleDateString()}</span>
+              <span className="text-muted-foreground text-xs">{formatDMY(item.created_at)}</span>
             </div>
             {!compact && log && (
               <Link to="/log/$logId" params={{ logId: log.id }} className="text-sm text-primary hover:underline block truncate">

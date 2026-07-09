@@ -1,47 +1,63 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Card } from "@/components/ui/card";
-import { Loader2, BookOpen, AlertTriangle, Leaf } from "lucide-react";
+import { Loader2, BookOpen, AlertTriangle, Leaf, ChevronDown } from "lucide-react";
 import { getOrGenerateCropGuide } from "@/lib/crop-guide.functions";
 
 type Stage = { stage: string; duration: string };
 type Disease = { name: string; symptoms: string; prevention: string };
 
 export function CropGuide({ cropName }: { cropName: string }) {
+  const [open, setOpen] = useState(false);
   const fn = useServerFn(getOrGenerateCropGuide);
   const { data, isLoading, error } = useQuery({
     queryKey: ["crop-guide", cropName.toLowerCase()],
     queryFn: () => fn({ data: { cropName } }),
     staleTime: 1000 * 60 * 60,
     retry: 1,
+    enabled: open,
   });
 
-  if (isLoading) {
-    return (
-      <Card className="p-4 flex items-center gap-2 text-sm text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" /> Loading crop guide for {cropName}…
-      </Card>
-    );
-  }
-  if (error || !data) {
-    return (
-      <Card className="p-4 text-sm text-muted-foreground">
-        Crop guide unavailable right now.
-      </Card>
-    );
-  }
+  return (
+    <Card className="overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left hover:bg-muted/50 transition"
+        aria-expanded={open}
+      >
+        <span className="flex items-center gap-2 font-semibold text-sm">
+          <BookOpen className="h-4 w-4 text-primary" />
+          Crop guide: {cropName}
+        </span>
+        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
 
+      {open && (
+        <div className="px-4 pb-4 space-y-4 border-t">
+          {isLoading && (
+            <div className="flex items-center gap-2 pt-4 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading crop guide…
+            </div>
+          )}
+          {error && !isLoading && (
+            <p className="pt-4 text-sm text-muted-foreground">Crop guide unavailable right now.</p>
+          )}
+          {data && <GuideBody data={data} />}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function GuideBody({ data }: { data: any }) {
   const lifecycle = (data.lifecycle as unknown as Stage[]) ?? [];
   const diseases = (data.diseases as unknown as Disease[]) ?? [];
-
   return (
-    <Card className="p-4 space-y-4">
-      <div className="flex items-center gap-2">
-        <BookOpen className="h-5 w-5 text-primary" />
-        <h2 className="font-semibold">Crop guide: {data.crop_name}</h2>
-      </div>
-
+    <div className="space-y-4 pt-4">
       <section>
+
         <h3 className="text-sm font-semibold flex items-center gap-1 mb-1">
           <Leaf className="h-4 w-4 text-primary" /> Growing conditions
         </h3>
@@ -80,6 +96,6 @@ export function CropGuide({ cropName }: { cropName: string }) {
       )}
 
       <p className="text-[10px] text-muted-foreground">Guidance tailored for tropical Southeast Asia · region: {data.region}</p>
-    </Card>
+    </div>
   );
 }

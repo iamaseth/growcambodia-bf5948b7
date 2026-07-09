@@ -31,6 +31,8 @@ import { toast } from "sonner";
 import { PhotoLightbox } from "./photo-lightbox";
 import { ShareMenu } from "./share-menu";
 import { analyzeUpdate } from "@/lib/analyze-update.functions";
+import { formatDMY } from "@/lib/date-format";
+
 
 const STAGE_COLORS: Record<string, string> = {
   "soil preparation": "bg-stone-100 text-stone-800",

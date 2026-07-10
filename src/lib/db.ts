@@ -35,6 +35,8 @@ export type PlantLog = {
   area_unit: string | null;
   variety: string | null;
   planted_at: string | null;
+  lat: number | null;
+  lng: number | null;
 };
 
 

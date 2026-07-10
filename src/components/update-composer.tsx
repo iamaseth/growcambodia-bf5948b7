@@ -131,6 +131,19 @@ export function UpdateComposer({
     }
   };
 
+  const usePlantLocation = async () => {
+    setPlantLocBusy(true);
+    try {
+      const c = await getGeo();
+      setPlantCoords({ lat: c.latitude, lng: c.longitude });
+      toast.success("Plant location captured");
+    } catch (e: any) {
+      toast.error(e.message ?? "Couldn't get location");
+    } finally {
+      setPlantLocBusy(false);
+    }
+  };
+
   const reset = () => {
     setStage("Vegetative");
     setNotes("");
@@ -148,6 +161,7 @@ export function UpdateComposer({
     setQuantity("");
     setAreaValue("");
     setAreaUnit("m2");
+    setPlantCoords(null);
     if (!logId) {
       setSelectedFarm("");
       setSelectedLog("");

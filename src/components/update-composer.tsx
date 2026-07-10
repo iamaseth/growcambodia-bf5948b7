@@ -344,6 +344,23 @@ export function UpdateComposer({
                         </div>
                       </div>
                       <p className="text-[10px] text-muted-foreground">Fill whichever applies — number of plants OR planted area.</p>
+                      <div className="space-y-1 pt-1 border-t">
+                        <Label className="text-xs">Plant location (optional)</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={usePlantLocation}
+                          disabled={plantLocBusy}
+                          className="w-full"
+                        >
+                          {plantLocBusy ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <LocateFixed className="h-4 w-4 mr-1" />}
+                          {plantCoords ? `Pinned (${plantCoords.lat.toFixed(5)}, ${plantCoords.lng.toFixed(5)})` : "Pin this plant's exact spot"}
+                        </Button>
+                        <p className="text-[10px] text-muted-foreground">
+                          Stand next to the plant/row and tap. Phone GPS is accurate to ~3–10 m — good enough to find a specific tree or bed on a 1 ha farm. Leave blank to inherit the farm's location.
+                        </p>
+                      </div>
                     </div>
                   ) : (
                     <Select

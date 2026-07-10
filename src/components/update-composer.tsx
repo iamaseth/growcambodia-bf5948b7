@@ -78,6 +78,8 @@ export function UpdateComposer({
   const [quantity, setQuantity] = useState<string>("");
   const [areaValue, setAreaValue] = useState<string>("");
   const [areaUnit, setAreaUnit] = useState<string>("m2");
+  const [plantCoords, setPlantCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [plantLocBusy, setPlantLocBusy] = useState(false);
 
   const showAgeField = stage === "Transplant" || isTreeCrop(cropType);
 

@@ -154,6 +154,8 @@ export async function createLog(
     quantity?: number | null;
     area_value?: number | null;
     area_unit?: string | null;
+    lat?: number | null;
+    lng?: number | null;
   },
   userId: string,
 ) {

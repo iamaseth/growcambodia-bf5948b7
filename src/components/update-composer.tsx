@@ -203,6 +203,8 @@ export function UpdateComposer({
               quantity: quantity ? Number(quantity) : null,
               area_value: areaValue ? Number(areaValue) : null,
               area_unit: areaValue ? areaUnit : null,
+              lat: plantCoords?.lat ?? null,
+              lng: plantCoords?.lng ?? null,
             },
             user.id,
           );

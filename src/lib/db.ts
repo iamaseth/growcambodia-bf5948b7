@@ -35,6 +35,8 @@ export type PlantLog = {
   area_unit: string | null;
   variety: string | null;
   planted_at: string | null;
+  lat: number | null;
+  lng: number | null;
 };
 
 
@@ -152,6 +154,8 @@ export async function createLog(
     quantity?: number | null;
     area_value?: number | null;
     area_unit?: string | null;
+    lat?: number | null;
+    lng?: number | null;
   },
   userId: string,
 ) {

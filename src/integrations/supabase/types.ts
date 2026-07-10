@@ -89,6 +89,8 @@ export type Database = {
           estimated_age_years: number | null
           farm_id: string
           id: string
+          lat: number | null
+          lng: number | null
           planted_at: string | null
           quantity: number | null
           status: string
@@ -105,6 +107,8 @@ export type Database = {
           estimated_age_years?: number | null
           farm_id: string
           id?: string
+          lat?: number | null
+          lng?: number | null
           planted_at?: string | null
           quantity?: number | null
           status?: string
@@ -121,6 +125,8 @@ export type Database = {
           estimated_age_years?: number | null
           farm_id?: string
           id?: string
+          lat?: number | null
+          lng?: number | null
           planted_at?: string | null
           quantity?: number | null
           status?: string

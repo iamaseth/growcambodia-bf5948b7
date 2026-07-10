@@ -78,6 +78,8 @@ export function UpdateComposer({
   const [quantity, setQuantity] = useState<string>("");
   const [areaValue, setAreaValue] = useState<string>("");
   const [areaUnit, setAreaUnit] = useState<string>("m2");
+  const [plantCoords, setPlantCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [plantLocBusy, setPlantLocBusy] = useState(false);
 
   const showAgeField = stage === "Transplant" || isTreeCrop(cropType);
 
@@ -129,6 +131,19 @@ export function UpdateComposer({
     }
   };
 
+  const usePlantLocation = async () => {
+    setPlantLocBusy(true);
+    try {
+      const c = await getGeo();
+      setPlantCoords({ lat: c.latitude, lng: c.longitude });
+      toast.success("Plant location captured");
+    } catch (e: any) {
+      toast.error(e.message ?? "Couldn't get location");
+    } finally {
+      setPlantLocBusy(false);
+    }
+  };
+
   const reset = () => {
     setStage("Vegetative");
     setNotes("");
@@ -146,6 +161,7 @@ export function UpdateComposer({
     setQuantity("");
     setAreaValue("");
     setAreaUnit("m2");
+    setPlantCoords(null);
     if (!logId) {
       setSelectedFarm("");
       setSelectedLog("");
@@ -187,6 +203,8 @@ export function UpdateComposer({
               quantity: quantity ? Number(quantity) : null,
               area_value: areaValue ? Number(areaValue) : null,
               area_unit: areaValue ? areaUnit : null,
+              lat: plantCoords?.lat ?? null,
+              lng: plantCoords?.lng ?? null,
             },
             user.id,
           );
@@ -326,6 +344,23 @@ export function UpdateComposer({
                         </div>
                       </div>
                       <p className="text-[10px] text-muted-foreground">Fill whichever applies — number of plants OR planted area.</p>
+                      <div className="space-y-1 pt-1 border-t">
+                        <Label className="text-xs">Plant location (optional)</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={usePlantLocation}
+                          disabled={plantLocBusy}
+                          className="w-full"
+                        >
+                          {plantLocBusy ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <LocateFixed className="h-4 w-4 mr-1" />}
+                          {plantCoords ? `Pinned (${plantCoords.lat.toFixed(5)}, ${plantCoords.lng.toFixed(5)})` : "Pin this plant's exact spot"}
+                        </Button>
+                        <p className="text-[10px] text-muted-foreground">
+                          Stand next to the plant/row and tap. Phone GPS is accurate to ~3–10 m — good enough to find a specific tree or bed on a 1 ha farm. Leave blank to inherit the farm's location.
+                        </p>
+                      </div>
                     </div>
                   ) : (
                     <Select

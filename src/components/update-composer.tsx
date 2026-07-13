@@ -10,6 +10,7 @@ import { Plus, ImagePlus, Loader2, X, LocateFixed } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { compressAndUploadPhotos } from "@/lib/photo";
 import { createUpdate, fetchMyFarms, fetchLogsForFarm, createFarm, createLog, fetchLatestStage } from "@/lib/db";
+import { COMMON_CROPS } from "@/lib/crops";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 

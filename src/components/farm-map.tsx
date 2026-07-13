@@ -14,6 +14,7 @@ export function FarmMap({ farms, onSelectFarm, onPickLocation, height = "60vh" }
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     if (!hasMapsKey) {
@@ -25,8 +26,8 @@ export function FarmMap({ farms, onSelectFarm, onPickLocation, height = "60vh" }
       .then((g) => {
         if (cancelled || !ref.current) return;
         const map = new g.maps.Map(ref.current, {
-          center: farms[0] ? { lat: farms[0].lat, lng: farms[0].lng } : { lat: 20, lng: 0 },
-          zoom: farms[0] ? 10 : 2,
+          center: farms[0] ? { lat: farms[0].lat, lng: farms[0].lng } : { lat: 10.6, lng: 104.18 },
+          zoom: farms[0] ? 12 : 8,
           streetViewControl: false,
           mapTypeControl: false,
           fullscreenControl: false,
@@ -37,6 +38,7 @@ export function FarmMap({ farms, onSelectFarm, onPickLocation, height = "60vh" }
             onPickLocation(e.latLng.lat(), e.latLng.lng());
           });
         }
+        setMapReady(true);
       })
       .catch((e) => setError(e.message));
     return () => {
@@ -47,26 +49,30 @@ export function FarmMap({ farms, onSelectFarm, onPickLocation, height = "60vh" }
 
   useEffect(() => {
     const g = (window as any).google;
-    if (!g || !mapRef.current) return;
+    if (!g || !mapRef.current || !mapReady) return;
     markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = [];
-    farms.forEach((f) => {
+    const valid = farms.filter(
+      (f) => typeof f.lat === "number" && typeof f.lng === "number" && !Number.isNaN(f.lat) && !Number.isNaN(f.lng),
+    );
+    valid.forEach((f) => {
       const marker = new g.maps.Marker({
-        position: { lat: f.lat, lng: f.lng },
+        position: { lat: Number(f.lat), lng: Number(f.lng) },
         map: mapRef.current,
         title: f.name,
       });
       marker.addListener("click", () => onSelectFarm?.(f));
       markersRef.current.push(marker);
     });
-    if (farms.length > 1) {
+    if (valid.length > 1) {
       const bounds = new g.maps.LatLngBounds();
-      farms.forEach((f) => bounds.extend({ lat: f.lat, lng: f.lng }));
+      valid.forEach((f) => bounds.extend({ lat: Number(f.lat), lng: Number(f.lng) }));
       mapRef.current.fitBounds(bounds, 60);
-    } else if (farms.length === 1) {
-      mapRef.current.setCenter({ lat: farms[0].lat, lng: farms[0].lng });
+    } else if (valid.length === 1) {
+      mapRef.current.setCenter({ lat: Number(valid[0].lat), lng: Number(valid[0].lng) });
+      mapRef.current.setZoom(14);
     }
-  }, [farms, onSelectFarm]);
+  }, [farms, onSelectFarm, mapReady]);
 
   if (error) {
     return (

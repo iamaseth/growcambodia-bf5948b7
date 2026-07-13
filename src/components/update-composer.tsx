@@ -10,6 +10,7 @@ import { Plus, ImagePlus, Loader2, X, LocateFixed } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { compressAndUploadPhotos } from "@/lib/photo";
 import { createUpdate, fetchMyFarms, fetchLogsForFarm, createFarm, createLog, fetchLatestStage } from "@/lib/db";
+import { COMMON_CROPS } from "@/lib/crops";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -312,8 +313,22 @@ export function UpdateComposer({
                     <div className="space-y-2">
                       <div className="grid grid-cols-2 gap-2">
                         <Input placeholder="Title (e.g. North bed)" value={logTitle} onChange={(e) => setLogTitle(e.target.value)} />
-                        <Input placeholder="Crop (e.g. Durian)" value={cropType} onChange={(e) => setCropType(e.target.value)} />
+                        <Select
+                          value={COMMON_CROPS.includes(cropType) ? cropType : cropType ? "__other__" : ""}
+                          onValueChange={(v) => setCropType(v === "__other__" ? "" : v)}
+                        >
+                          <SelectTrigger><SelectValue placeholder="Crop" /></SelectTrigger>
+                          <SelectContent className="max-h-64">
+                            {COMMON_CROPS.map((c) => (
+                              <SelectItem key={c} value={c}>{c}</SelectItem>
+                            ))}
+                            <SelectItem value="__other__">Other (type below)</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
+                      {(!COMMON_CROPS.includes(cropType) || cropType === "") && (
+                        <Input placeholder="Custom crop name" value={cropType} onChange={(e) => setCropType(e.target.value)} />
+                      )}
                       <div className="grid grid-cols-2 gap-2">
                         <Input placeholder="Variety (optional)" value={variety} onChange={(e) => setVariety(e.target.value)} />
                         <Input type="date" value={plantedAt} onChange={(e) => setPlantedAt(e.target.value)} title="Planted date" />

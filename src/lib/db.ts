@@ -143,6 +143,17 @@ export async function createFarm(input: { name: string; lat: number; lng: number
   return data as Farm;
 }
 
+export async function updateFarmLocation(farmId: string, lat: number, lng: number) {
+  const { data, error } = await supabase
+    .from("farms")
+    .update({ lat, lng })
+    .eq("id", farmId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as Farm;
+}
+
 export async function createLog(
   input: {
     farm_id: string;

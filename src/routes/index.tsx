@@ -10,10 +10,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { FarmMap } from "@/components/farm-map";
 import { UpdateCard } from "@/components/update-card";
 import { UpdateComposer } from "@/components/update-composer";
-import { fetchFarms, fetchFeed, fetchLogsForFarm, type Farm } from "@/lib/db";
+import { fetchFarms, fetchFeed, fetchLogsForFarm, updateFarmLocation, type Farm } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { formatDM } from "@/lib/date-format";
+import { useQueryClient } from "@tanstack/react-query";
+import { LocateFixed, Loader2, MapPin } from "lucide-react";
+import { toast } from "sonner";
 
 
 
@@ -173,19 +176,81 @@ function Home() {
 }
 
 function FarmDetail({ farm, onClose }: { farm: Farm; onClose: () => void }) {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const [editingLoc, setEditingLoc] = useState(false);
+  const [savingLoc, setSavingLoc] = useState(false);
   const { data: logs } = useQuery({
     queryKey: ["farm-logs", farm.id],
     queryFn: () => fetchLogsForFarm(farm.id),
   });
+  const isOwner = user?.id === farm.user_id;
+
+  const saveCoords = async (lat: number, lng: number) => {
+    setSavingLoc(true);
+    try {
+      await updateFarmLocation(farm.id, lat, lng);
+      toast.success("Farm location updated");
+      qc.invalidateQueries({ queryKey: ["farms"] });
+      qc.invalidateQueries({ queryKey: ["myfarms"] });
+      setEditingLoc(false);
+    } catch (e: any) {
+      toast.error(e.message ?? "Couldn't update location");
+    } finally {
+      setSavingLoc(false);
+    }
+  };
+
+  const useMyLocation = () => {
+    if (!navigator.geolocation) return toast.error("Geolocation not supported");
+    navigator.geolocation.getCurrentPosition(
+      (p) => saveCoords(p.coords.latitude, p.coords.longitude),
+      (err) => toast.error(err.code === err.PERMISSION_DENIED ? "Location permission denied" : "Couldn't get location"),
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
+
   return (
     <Card className="p-4 space-y-3">
-      <div className="flex items-start justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
           <h2 className="font-semibold">{farm.name}</h2>
           {farm.address && <p className="text-xs text-muted-foreground">{farm.address}</p>}
+          <p className="text-[10px] text-muted-foreground mt-0.5">
+            {farm.lat.toFixed(5)}, {farm.lng.toFixed(5)}
+          </p>
         </div>
         <Button variant="ghost" size="sm" onClick={onClose}>Close</Button>
       </div>
+
+      {isOwner && (
+        <div className="space-y-2 rounded-md border bg-muted/40 p-2">
+          {!editingLoc ? (
+            <Button variant="outline" size="sm" onClick={() => setEditingLoc(true)} className="w-full">
+              <MapPin className="h-4 w-4 mr-1.5" /> Fix farm location
+            </Button>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">
+                Tap anywhere on the map below to drop the correct pin, or use your current location.
+              </p>
+              <FarmMap
+                farms={[farm]}
+                onPickLocation={saveCoords}
+                height="240px"
+              />
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={useMyLocation} disabled={savingLoc} className="flex-1">
+                  {savingLoc ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <LocateFixed className="h-4 w-4 mr-1" />}
+                  Use my location
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setEditingLoc(false)}>Cancel</Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="space-y-2">
         {(logs ?? []).length === 0 && <p className="text-sm text-muted-foreground">No plant logs at this farm yet.</p>}
         {(logs ?? []).map((l) => (
@@ -207,3 +272,4 @@ function FarmDetail({ farm, onClose }: { farm: Farm; onClose: () => void }) {
     </Card>
   );
 }
+

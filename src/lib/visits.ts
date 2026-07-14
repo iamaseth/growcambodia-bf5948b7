@@ -151,16 +151,20 @@ export async function createVisit(
 }
 
 export async function completeVisit(id: string, notesAppend?: string): Promise<void> {
-  const patch: Record<string, unknown> = {
-    status: "completed",
-    completed_at: new Date().toISOString(),
-  };
+  let mergedNotes: string | undefined;
   if (notesAppend) {
     const { data: cur } = await supabase.from("farm_visits").select("private_notes").eq("id", id).maybeSingle();
     const prev = (cur?.private_notes ?? "").trim();
-    patch.private_notes = prev ? `${prev}\n\n[Visit notes]\n${notesAppend}` : `[Visit notes]\n${notesAppend}`;
+    mergedNotes = prev ? `${prev}\n\n[Visit notes]\n${notesAppend}` : `[Visit notes]\n${notesAppend}`;
   }
-  const { error } = await supabase.from("farm_visits").update(patch).eq("id", id);
+  const { error } = await supabase
+    .from("farm_visits")
+    .update({
+      status: "completed",
+      completed_at: new Date().toISOString(),
+      ...(mergedNotes !== undefined ? { private_notes: mergedNotes } : {}),
+    })
+    .eq("id", id);
   if (error) throw error;
 }
 

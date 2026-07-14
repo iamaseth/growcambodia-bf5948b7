@@ -71,7 +71,7 @@ function Home() {
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b">
         <div className="max-w-2xl mx-auto flex items-center justify-between px-4 h-14">
           <Link to="/" className="flex items-center gap-2 font-bold text-primary">
-            <Sprout className="h-5 w-5" /> CropTrack
+            <Sprout className="h-5 w-5" /> Grow Cambodia
           </Link>
           {user ? (
             <Button variant="ghost" size="sm" onClick={signOut}>

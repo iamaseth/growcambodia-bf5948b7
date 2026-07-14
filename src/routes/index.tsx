@@ -231,6 +231,12 @@ function FarmDetail({ farm, onClose }: { farm: Farm; onClose: () => void }) {
       </div>
 
       {isOwner && (
+        <div className="flex flex-wrap gap-2">
+          <NextVisitBadge farmId={farm.id} />
+        </div>
+      )}
+
+      {isOwner && (
         <div className="space-y-2 rounded-md border bg-muted/40 p-2">
           {!editingLoc ? (
             <Button variant="outline" size="sm" onClick={() => setEditingLoc(true)} className="w-full">

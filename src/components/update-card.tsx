@@ -90,7 +90,7 @@ export function UpdateCard({ item, compact }: { item: FeedItem; compact?: boolea
   const shareUrl = typeof window !== "undefined"
     ? `${window.location.origin}/log/${log?.id ?? ""}#u-${item.id}`
     : `/log/${log?.id ?? ""}`;
-  const shareText = `${log?.crop_type ?? "Crop"} update — ${item.growth_stage} on CropTrack`;
+  const shareText = `${log?.crop_type ?? "Crop"} update — ${item.growth_stage} on Grow Cambodia`;
 
   return (
     <Card id={`u-${item.id}`} className="overflow-hidden scroll-mt-20">

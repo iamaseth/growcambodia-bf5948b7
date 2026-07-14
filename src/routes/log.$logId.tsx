@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { UpdateCard } from "@/components/update-card";
 import { UpdateComposer } from "@/components/update-composer";
 import { CropGuide } from "@/components/crop-guide";
+import { NextVisitBadge } from "@/components/next-visit-badge";
 import { fetchLog, fetchLogTimeline, type FeedItem } from "@/lib/db";
 import { STAGES } from "@/components/update-composer";
 import { formatDMY } from "@/lib/date-format";

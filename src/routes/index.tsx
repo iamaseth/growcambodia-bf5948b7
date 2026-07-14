@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Sprout, Map as MapIcon, Rss, LogIn, LogOut, CalendarIcon } from "lucide-react";
+import { Sprout, Map as MapIcon, Rss, LogIn, LogOut, CalendarIcon, CalendarClock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,6 +10,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { FarmMap } from "@/components/farm-map";
 import { UpdateCard } from "@/components/update-card";
 import { UpdateComposer } from "@/components/update-composer";
+import { VisitsPanel } from "@/components/visits-panel";
+import { NextVisitBadge } from "@/components/next-visit-badge";
 import { fetchFarms, fetchFeed, fetchLogsForFarm, updateFarmLocation, type Farm } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -69,7 +71,7 @@ function Home() {
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b">
         <div className="max-w-2xl mx-auto flex items-center justify-between px-4 h-14">
           <Link to="/" className="flex items-center gap-2 font-bold text-primary">
-            <Sprout className="h-5 w-5" /> CropTrack
+            <Sprout className="h-5 w-5" /> Grow Cambodia
           </Link>
           {user ? (
             <Button variant="ghost" size="sm" onClick={signOut}>
@@ -87,9 +89,10 @@ function Home() {
 
       <main className="max-w-2xl mx-auto px-4 pt-4">
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="feed"><Rss className="h-4 w-4 mr-1.5" /> Feed</TabsTrigger>
             <TabsTrigger value="map"><MapIcon className="h-4 w-4 mr-1.5" /> Map</TabsTrigger>
+            <TabsTrigger value="visits"><CalendarClock className="h-4 w-4 mr-1.5" /> Visits</TabsTrigger>
           </TabsList>
 
           <TabsContent value="feed" className="space-y-3 mt-4">
@@ -165,6 +168,10 @@ function Home() {
               </p>
             )}
           </TabsContent>
+
+          <TabsContent value="visits" className="mt-4">
+            <VisitsPanel />
+          </TabsContent>
         </Tabs>
       </main>
 
@@ -222,6 +229,12 @@ function FarmDetail({ farm, onClose }: { farm: Farm; onClose: () => void }) {
         </div>
         <Button variant="ghost" size="sm" onClick={onClose}>Close</Button>
       </div>
+
+      {isOwner && (
+        <div className="flex flex-wrap gap-2">
+          <NextVisitBadge farmId={farm.id} />
+        </div>
+      )}
 
       {isOwner && (
         <div className="space-y-2 rounded-md border bg-muted/40 p-2">

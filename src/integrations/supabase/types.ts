@@ -47,6 +47,72 @@ export type Database = {
         }
         Relationships: []
       }
+      farm_visits: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          farm_id: string
+          id: string
+          plant_log_id: string | null
+          private_notes: string | null
+          purpose: string | null
+          scheduled_date: string
+          scheduled_time: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          visit_type: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          farm_id: string
+          id?: string
+          plant_log_id?: string | null
+          private_notes?: string | null
+          purpose?: string | null
+          scheduled_date: string
+          scheduled_time?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          visit_type?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          farm_id?: string
+          id?: string
+          plant_log_id?: string | null
+          private_notes?: string | null
+          purpose?: string | null
+          scheduled_date?: string
+          scheduled_time?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          visit_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_visits_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "farm_visits_plant_log_id_fkey"
+            columns: ["plant_log_id"]
+            isOneToOne: false
+            referencedRelation: "plant_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       farms: {
         Row: {
           address: string | null

@@ -13,8 +13,8 @@ import { Sprout } from "lucide-react";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — CropTrack" },
-      { name: "description", content: "Sign in to log crops, drop farm pins, and post updates on CropTrack." },
+      { title: "Sign in — Grow Cambodia" },
+      { name: "description", content: "Sign in to log crops, drop farm pins, and post updates on Grow Cambodia." },
     ],
   }),
   component: AuthPage,
@@ -70,7 +70,7 @@ function AuthPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-secondary to-background">
       <Link to="/" className="mb-6 flex items-center gap-2 text-primary font-semibold text-xl">
-        <Sprout className="h-6 w-6" /> CropTrack
+        <Sprout className="h-6 w-6" /> Grow Cambodia
       </Link>
       <Card className="w-full max-w-sm p-6 space-y-4">
         <div>

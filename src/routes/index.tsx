@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Sprout, Map as MapIcon, Rss, LogIn, LogOut, CalendarIcon } from "lucide-react";
+import { Sprout, Map as MapIcon, Rss, LogIn, LogOut, CalendarIcon, CalendarClock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,6 +10,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { FarmMap } from "@/components/farm-map";
 import { UpdateCard } from "@/components/update-card";
 import { UpdateComposer } from "@/components/update-composer";
+import { VisitsPanel } from "@/components/visits-panel";
+import { NextVisitBadge } from "@/components/next-visit-badge";
 import { fetchFarms, fetchFeed, fetchLogsForFarm, updateFarmLocation, type Farm } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";

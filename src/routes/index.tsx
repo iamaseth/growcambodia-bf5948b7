@@ -168,6 +168,10 @@ function Home() {
               </p>
             )}
           </TabsContent>
+
+          <TabsContent value="visits" className="mt-4">
+            <VisitsPanel />
+          </TabsContent>
         </Tabs>
       </main>
 

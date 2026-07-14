@@ -158,6 +158,12 @@ function LogView() {
               )}
             </div>
 
+            {log && (
+              <div className="flex flex-wrap gap-2">
+                <NextVisitBadge farmId={log.farm_id} logId={log.id} />
+              </div>
+            )}
+
             <div>
               <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
                 <span>Stage progress</span>

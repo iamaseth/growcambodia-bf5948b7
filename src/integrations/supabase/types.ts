@@ -47,6 +47,53 @@ export type Database = {
         }
         Relationships: []
       }
+      farm_members: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          farm_id: string
+          id: string
+          invited_at: string
+          invited_by: string | null
+          member_role: Database["public"]["Enums"]["farm_member_role"]
+          status: Database["public"]["Enums"]["farm_member_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          farm_id: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          member_role?: Database["public"]["Enums"]["farm_member_role"]
+          status?: Database["public"]["Enums"]["farm_member_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          farm_id?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          member_role?: Database["public"]["Enums"]["farm_member_role"]
+          status?: Database["public"]["Enums"]["farm_member_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_members_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       farm_visits: {
         Row: {
           completed_at: string | null
@@ -106,6 +153,81 @@ export type Database = {
           },
           {
             foreignKeyName: "farm_visits_plant_log_id_fkey"
+            columns: ["plant_log_id"]
+            isOneToOne: false
+            referencedRelation: "plant_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      farmer_submissions: {
+        Row: {
+          created_at: string
+          farm_id: string
+          id: string
+          image_urls: string[]
+          measurement_data: Json
+          observations: string | null
+          plant_log_id: string | null
+          published_at: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewer_id: string | null
+          status: Database["public"]["Enums"]["submission_status"]
+          submission_type: Database["public"]["Enums"]["submission_type"]
+          submitted_at: string | null
+          submitted_by: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          farm_id: string
+          id?: string
+          image_urls?: string[]
+          measurement_data?: Json
+          observations?: string | null
+          plant_log_id?: string | null
+          published_at?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          status?: Database["public"]["Enums"]["submission_status"]
+          submission_type?: Database["public"]["Enums"]["submission_type"]
+          submitted_at?: string | null
+          submitted_by: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          farm_id?: string
+          id?: string
+          image_urls?: string[]
+          measurement_data?: Json
+          observations?: string | null
+          plant_log_id?: string | null
+          published_at?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          status?: Database["public"]["Enums"]["submission_status"]
+          submission_type?: Database["public"]["Enums"]["submission_type"]
+          submitted_at?: string | null
+          submitted_by?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farmer_submissions_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "farmer_submissions_plant_log_id_fkey"
             columns: ["plant_log_id"]
             isOneToOne: false
             referencedRelation: "plant_logs"
@@ -382,6 +504,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_manage_farm: {
+        Args: { _farm: string; _user: string }
+        Returns: boolean
+      }
+      can_review_farm: {
+        Args: { _farm: string; _user: string }
+        Returns: boolean
+      }
+      farm_member_role: {
+        Args: { _farm: string; _user: string }
+        Returns: Database["public"]["Enums"]["farm_member_role"]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -389,9 +523,24 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_farm_member: {
+        Args: { _farm: string; _user: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "farmer" | "agronomist" | "moderator" | "admin"
+      farm_member_role: "owner" | "farmer" | "staff" | "viewer"
+      farm_member_status: "invited" | "active" | "suspended" | "removed"
+      submission_status:
+        | "draft"
+        | "submitted"
+        | "under_review"
+        | "approved"
+        | "rejected"
+        | "published"
+        | "archived"
+      submission_type: "progress" | "measurement" | "problem" | "harvest"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -520,6 +669,18 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["farmer", "agronomist", "moderator", "admin"],
+      farm_member_role: ["owner", "farmer", "staff", "viewer"],
+      farm_member_status: ["invited", "active", "suspended", "removed"],
+      submission_status: [
+        "draft",
+        "submitted",
+        "under_review",
+        "approved",
+        "rejected",
+        "published",
+        "archived",
+      ],
+      submission_type: ["progress", "measurement", "problem", "harvest"],
     },
   },
 } as const

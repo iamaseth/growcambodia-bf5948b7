@@ -105,7 +105,7 @@ export async function reviewSubmission(
   notes?: string,
 ) {
   const now = new Date().toISOString();
-  const patch = {
+  const patch: Record<string, unknown> = {
     status: decision,
     reviewer_id: reviewerId,
     reviewed_at: now,

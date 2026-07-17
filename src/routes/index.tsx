@@ -237,6 +237,9 @@ function FarmDetail({ farm, onClose }: { farm: Farm; onClose: () => void }) {
         </div>
       )}
 
+      <FarmTeamPanel farmId={farm.id} farmOwnerId={farm.user_id} />
+
+
       {isOwner && (
         <div className="space-y-2 rounded-md border bg-muted/40 p-2">
           {!editingLoc ? (

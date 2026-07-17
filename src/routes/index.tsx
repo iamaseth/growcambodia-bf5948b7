@@ -74,17 +74,30 @@ function Home() {
           <Link to="/" className="flex items-center gap-2 font-bold text-primary">
             <Sprout className="h-5 w-5" /> Grow Cambodia
           </Link>
-          {user ? (
-            <Button variant="ghost" size="sm" onClick={signOut}>
-              <LogOut className="h-4 w-4 mr-1" /> Sign out
-            </Button>
-          ) : (
-            <Link to="/auth">
-              <Button variant="ghost" size="sm">
-                <LogIn className="h-4 w-4 mr-1" /> Sign in
+          <div className="flex items-center gap-1">
+            {user && (
+              <>
+                <Link to="/my-farms">
+                  <Button variant="ghost" size="sm">My Farms</Button>
+                </Link>
+                <Link to="/review">
+                  <Button variant="ghost" size="sm">Review</Button>
+                </Link>
+              </>
+            )}
+            {user ? (
+              <Button variant="ghost" size="sm" onClick={signOut}>
+                <LogOut className="h-4 w-4 mr-1" /> Sign out
               </Button>
-            </Link>
-          )}
+            ) : (
+              <Link to="/auth">
+                <Button variant="ghost" size="sm">
+                  <LogIn className="h-4 w-4 mr-1" /> Sign in
+                </Button>
+              </Link>
+            )}
+          </div>
+
         </div>
       </header>
 

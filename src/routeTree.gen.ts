@@ -9,10 +9,22 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ReviewRouteImport } from './routes/review'
+import { Route as MyFarmsRouteImport } from './routes/my-farms'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LogLogIdRouteImport } from './routes/log.$logId'
 
+const ReviewRoute = ReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyFarmsRoute = MyFarmsRouteImport.update({
+  id: '/my-farms',
+  path: '/my-farms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -32,35 +44,57 @@ const LogLogIdRoute = LogLogIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/my-farms': typeof MyFarmsRoute
+  '/review': typeof ReviewRoute
   '/log/$logId': typeof LogLogIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/my-farms': typeof MyFarmsRoute
+  '/review': typeof ReviewRoute
   '/log/$logId': typeof LogLogIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/my-farms': typeof MyFarmsRoute
+  '/review': typeof ReviewRoute
   '/log/$logId': typeof LogLogIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/log/$logId'
+  fullPaths: '/' | '/auth' | '/my-farms' | '/review' | '/log/$logId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/log/$logId'
-  id: '__root__' | '/' | '/auth' | '/log/$logId'
+  to: '/' | '/auth' | '/my-farms' | '/review' | '/log/$logId'
+  id: '__root__' | '/' | '/auth' | '/my-farms' | '/review' | '/log/$logId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  MyFarmsRoute: typeof MyFarmsRoute
+  ReviewRoute: typeof ReviewRoute
   LogLogIdRoute: typeof LogLogIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/review': {
+      id: '/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof ReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-farms': {
+      id: '/my-farms'
+      path: '/my-farms'
+      fullPath: '/my-farms'
+      preLoaderRoute: typeof MyFarmsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -88,18 +122,10 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  MyFarmsRoute: MyFarmsRoute,
+  ReviewRoute: ReviewRoute,
   LogLogIdRoute: LogLogIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

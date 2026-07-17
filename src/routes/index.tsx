@@ -12,6 +12,7 @@ import { UpdateCard } from "@/components/update-card";
 import { UpdateComposer } from "@/components/update-composer";
 import { VisitsPanel } from "@/components/visits-panel";
 import { NextVisitBadge } from "@/components/next-visit-badge";
+import { FarmTeamPanel } from "@/components/farm-team-panel";
 import { fetchFarms, fetchFeed, fetchLogsForFarm, updateFarmLocation, type Farm } from "@/lib/db";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -73,17 +74,30 @@ function Home() {
           <Link to="/" className="flex items-center gap-2 font-bold text-primary">
             <Sprout className="h-5 w-5" /> Grow Cambodia
           </Link>
-          {user ? (
-            <Button variant="ghost" size="sm" onClick={signOut}>
-              <LogOut className="h-4 w-4 mr-1" /> Sign out
-            </Button>
-          ) : (
-            <Link to="/auth">
-              <Button variant="ghost" size="sm">
-                <LogIn className="h-4 w-4 mr-1" /> Sign in
+          <div className="flex items-center gap-1">
+            {user && (
+              <>
+                <Link to="/my-farms">
+                  <Button variant="ghost" size="sm">My Farms</Button>
+                </Link>
+                <Link to="/review">
+                  <Button variant="ghost" size="sm">Review</Button>
+                </Link>
+              </>
+            )}
+            {user ? (
+              <Button variant="ghost" size="sm" onClick={signOut}>
+                <LogOut className="h-4 w-4 mr-1" /> Sign out
               </Button>
-            </Link>
-          )}
+            ) : (
+              <Link to="/auth">
+                <Button variant="ghost" size="sm">
+                  <LogIn className="h-4 w-4 mr-1" /> Sign in
+                </Button>
+              </Link>
+            )}
+          </div>
+
         </div>
       </header>
 
@@ -235,6 +249,9 @@ function FarmDetail({ farm, onClose }: { farm: Farm; onClose: () => void }) {
           <NextVisitBadge farmId={farm.id} />
         </div>
       )}
+
+      <FarmTeamPanel farmId={farm.id} farmOwnerId={farm.user_id} />
+
 
       {isOwner && (
         <div className="space-y-2 rounded-md border bg-muted/40 p-2">

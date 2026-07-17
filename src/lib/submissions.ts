@@ -48,7 +48,7 @@ export async function createSubmission(input: {
     title: input.title,
     observations: input.observations ?? null,
     image_urls: input.image_urls ?? [],
-    measurement_data: input.measurement_data ?? {},
+    measurement_data: (input.measurement_data ?? {}) as never,
     status: input.submit ? ("submitted" as const) : ("draft" as const),
     submitted_at: input.submit ? new Date().toISOString() : null,
   };
@@ -58,7 +58,7 @@ export async function createSubmission(input: {
 }
 
 export async function updateSubmissionDraft(id: string, patch: Partial<Omit<Submission, "id" | "status">>) {
-  const { error } = await supabase.from("farmer_submissions").update(patch).eq("id", id);
+  const { error } = await supabase.from("farmer_submissions").update(patch as never).eq("id", id);
   if (error) throw error;
 }
 
@@ -105,14 +105,14 @@ export async function reviewSubmission(
   notes?: string,
 ) {
   const now = new Date().toISOString();
-  const patch: Record<string, unknown> = {
+  const patch = {
     status: decision,
     reviewer_id: reviewerId,
     reviewed_at: now,
     review_notes: notes ?? null,
   };
   if (decision === "published") patch.published_at = now;
-  const { error } = await supabase.from("farmer_submissions").update(patch).eq("id", id);
+  const { error } = await supabase.from("farmer_submissions").update(patch as never).eq("id", id);
   if (error) throw error;
 
   if (decision === "approved" || decision === "published") {

@@ -51,7 +51,7 @@ export async function fetchMyMemberships(userId: string) {
 export async function updateFarmMember(id: string, patch: Partial<Pick<FarmMember, "member_role" | "status">>) {
   const payload: Record<string, unknown> = { ...patch };
   if (patch.status === "active") payload.accepted_at = new Date().toISOString();
-  const { error } = await supabase.from("farm_members").update(payload).eq("id", id);
+  const { error } = await supabase.from("farm_members").update(payload as never).eq("id", id);
   if (error) throw error;
 }
 

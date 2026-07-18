@@ -65,20 +65,19 @@ export const resendFarmInvite = createServerFn({ method: "POST" })
     return input;
   })
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    const { data: member, error } = await supabase
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: member, error } = await supabaseAdmin
       .from("farm_members")
       .select("farm_id, user_id")
       .eq("id", data.memberId)
       .maybeSingle();
     if (error || !member) throw new Error("Membership not found");
-    const { data: canManage } = await supabase.rpc("can_manage_farm", {
-      _farm: member.farm_id,
-      _user: userId,
-    });
-    if (!canManage) throw new Error("Not authorized");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (!(await canManageFarm(supabaseAdmin, member.farm_id, userId))) {
+      throw new Error("Not authorized");
+    }
     const { data: u } = await supabaseAdmin.auth.admin.getUserById(member.user_id);
+
     const email = u?.user?.email;
     if (!email) throw new Error("No email on file for that member");
     const { error: invErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(email);

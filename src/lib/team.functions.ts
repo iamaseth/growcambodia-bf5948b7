@@ -3,6 +3,33 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 type Role = "owner" | "farmer" | "staff" | "viewer";
 
+// Authorization helper — mirrors public.can_manage_farm without relying on
+// the SECURITY DEFINER RPC (which is no longer executable by authenticated).
+async function canManageFarm(
+  admin: Awaited<ReturnType<typeof import("@/integrations/supabase/client.server").then>> extends never
+    ? never
+    : Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"],
+  farmId: string,
+  userId: string,
+): Promise<boolean> {
+  const [{ data: farm }, { data: adminRole }, { data: membership }] = await Promise.all([
+    admin.from("farms").select("user_id").eq("id", farmId).maybeSingle(),
+    admin.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle(),
+    admin
+      .from("farm_members")
+      .select("member_role, status")
+      .eq("farm_id", farmId)
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .maybeSingle(),
+  ]);
+  if (adminRole) return true;
+  if (farm?.user_id === userId) return true;
+  if (membership && (membership.member_role === "owner" || membership.member_role === "staff")) return true;
+  return false;
+}
+
+
 export const inviteFarmMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(

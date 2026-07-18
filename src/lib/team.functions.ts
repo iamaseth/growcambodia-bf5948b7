@@ -6,12 +6,11 @@ type Role = "owner" | "farmer" | "staff" | "viewer";
 // Authorization helper — mirrors public.can_manage_farm without relying on
 // the SECURITY DEFINER RPC (which is no longer executable by authenticated).
 async function canManageFarm(
-  admin: Awaited<ReturnType<typeof import("@/integrations/supabase/client.server").then>> extends never
-    ? never
-    : Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"],
+  admin: any,
   farmId: string,
   userId: string,
 ): Promise<boolean> {
+
   const [{ data: farm }, { data: adminRole }, { data: membership }] = await Promise.all([
     admin.from("farms").select("user_id").eq("id", farmId).maybeSingle(),
     admin.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle(),

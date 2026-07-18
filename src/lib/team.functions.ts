@@ -16,16 +16,12 @@ export const inviteFarmMember = createServerFn({ method: "POST" })
     },
   )
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    // Verify caller can manage this farm (RLS-safe)
-    const { data: canManage, error: cmErr } = await supabase.rpc("can_manage_farm", {
-      _farm: data.farmId,
-      _user: userId,
-    });
-    if (cmErr) throw cmErr;
-    if (!canManage) throw new Error("Not authorized to manage this farm");
-
+    const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (!(await canManageFarm(supabaseAdmin, data.farmId, userId))) {
+      throw new Error("Not authorized to manage this farm");
+    }
+
 
     // Look up user by email
     let targetUserId: string | null = null;

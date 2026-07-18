@@ -3,6 +3,32 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 type Role = "owner" | "farmer" | "staff" | "viewer";
 
+// Authorization helper — mirrors public.can_manage_farm without relying on
+// the SECURITY DEFINER RPC (which is no longer executable by authenticated).
+async function canManageFarm(
+  admin: any,
+  farmId: string,
+  userId: string,
+): Promise<boolean> {
+
+  const [{ data: farm }, { data: adminRole }, { data: membership }] = await Promise.all([
+    admin.from("farms").select("user_id").eq("id", farmId).maybeSingle(),
+    admin.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle(),
+    admin
+      .from("farm_members")
+      .select("member_role, status")
+      .eq("farm_id", farmId)
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .maybeSingle(),
+  ]);
+  if (adminRole) return true;
+  if (farm?.user_id === userId) return true;
+  if (membership && (membership.member_role === "owner" || membership.member_role === "staff")) return true;
+  return false;
+}
+
+
 export const inviteFarmMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
@@ -16,16 +42,12 @@ export const inviteFarmMember = createServerFn({ method: "POST" })
     },
   )
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    // Verify caller can manage this farm (RLS-safe)
-    const { data: canManage, error: cmErr } = await supabase.rpc("can_manage_farm", {
-      _farm: data.farmId,
-      _user: userId,
-    });
-    if (cmErr) throw cmErr;
-    if (!canManage) throw new Error("Not authorized to manage this farm");
-
+    const { userId } = context;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (!(await canManageFarm(supabaseAdmin, data.farmId, userId))) {
+      throw new Error("Not authorized to manage this farm");
+    }
+
 
     // Look up user by email
     let targetUserId: string | null = null;
@@ -69,20 +91,19 @@ export const resendFarmInvite = createServerFn({ method: "POST" })
     return input;
   })
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    const { data: member, error } = await supabase
+    const { userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: member, error } = await supabaseAdmin
       .from("farm_members")
       .select("farm_id, user_id")
       .eq("id", data.memberId)
       .maybeSingle();
     if (error || !member) throw new Error("Membership not found");
-    const { data: canManage } = await supabase.rpc("can_manage_farm", {
-      _farm: member.farm_id,
-      _user: userId,
-    });
-    if (!canManage) throw new Error("Not authorized");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (!(await canManageFarm(supabaseAdmin, member.farm_id, userId))) {
+      throw new Error("Not authorized");
+    }
     const { data: u } = await supabaseAdmin.auth.admin.getUserById(member.user_id);
+
     const email = u?.user?.email;
     if (!email) throw new Error("No email on file for that member");
     const { error: invErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(email);
